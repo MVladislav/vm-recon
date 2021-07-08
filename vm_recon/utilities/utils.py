@@ -1,4 +1,5 @@
 import logging as logger
+import os
 import re
 import subprocess
 import sys
@@ -47,6 +48,12 @@ class Utils:
         self.logging = verboselogs.VerboseLogger('vm_logger')
         self.logging.addHandler(logger.StreamHandler(sys.stdout))
         coloredlogs.install(level=log_level, fmt=log_format, logger=self.logging)
+
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
 
     def log_runBanner(self, msg: str) -> None:
         self.logging.info(f"[+] Running {msg}...")
@@ -172,3 +179,15 @@ class Utils:
             value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
         value = re.sub(r'[^\w\s-]', '', value.lower())
         return re.sub(r'[-\s]+', '-', value).strip('-_')
+
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
+
+    def in_sudo_mode(self):
+        """If the user doesn't run the program with super user privileges, don't allow them to continue."""
+        if not 'SUDO_UID' in os.environ.keys():
+            self.logging.error("Try running this program with sudo.")
+            sys.exit(1)
