@@ -1,5 +1,5 @@
-from vm_recon.cli import Context
-from vm_recon.utilities.utils import Utils
+from ..cli import Context
+from ..utilities.utils import Utils
 
 # ------------------------------------------------------------------------------
 #

@@ -1,8 +1,9 @@
 import sys
 
 import click
-from vm_recon.cli import pass_context
-from vm_recon.service.hack_service import HackService
+
+from ..cli import Context, pass_context
+from ..service.hack_service import HackService
 
 # ------------------------------------------------------------------------------
 #
@@ -13,7 +14,7 @@ from vm_recon.service.hack_service import HackService
 
 @click.group(invoke_without_command=True)
 @pass_context
-def cli(ctx):
+def cli(ctx: Context):
     '''
         A wrapper for infra structure scanning
         with predefined params
@@ -34,7 +35,7 @@ def cli(ctx):
 @click.option('-oa', '--options_append', is_flag=True, help='append new options to existing option list')
 @click.option('-r', '--rate', type=int, help='rate to scan ports for', default=1000)
 @click.pass_context
-def nmap(ctx, host, udp, options, options_append, rate):
+def nmap(ctx: Context, host, udp, options, options_append, rate):
     '''NMAP scan'''
     hack: HackService = ctx.obj.hack
     try:
@@ -58,7 +59,7 @@ def nmap(ctx, host, udp, options, options_append, rate):
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
 @click.option('-r', '--rate', type=int, help='rate to use', default=10000)
 @click.pass_context
-def masscan(ctx, host, rate):
+def masscan(ctx: Context, host, rate):
     '''MASSCAN scan'''
     hack: HackService = ctx.obj.hack
     try:

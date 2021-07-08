@@ -2,8 +2,8 @@ import os
 
 import click
 
-import vm_recon.config as config
-from vm_recon.utilities.utils import Utils
+from .config import BASE_PATH, PROJECT, PROJECT_NAME, VERBOSE, VERSION
+from .utilities.utils import Utils
 
 # ------------------------------------------------------------------------------
 #
@@ -15,11 +15,11 @@ from vm_recon.utilities.utils import Utils
 class Context:
 
     def __init__(self):
-        self.verbose = config.VERBOSE
-        self.project = config.PROJECT_NAME
-        self.base_path = config.BASE_PATH
+        self.verbose = VERBOSE
+        self.project = PROJECT_NAME
+        self.base_path = BASE_PATH
 
-        self.utils = None
+        self.utils: Utils = None
 
 # ------------------------------------------------------------------------------
 #
@@ -39,7 +39,7 @@ class ComplexCLI(click.MultiCommand):
 
     def get_command(self, ctx, name):
         try:
-            mod = __import__(f"{config.PROJECT}.commands.{name}", None, None, ["cli"])
+            mod = __import__(f"{PROJECT}.commands.{name}", None, None, ["cli"])
             return mod.cli
         except ImportError as e:
             pass
@@ -58,12 +58,12 @@ pass_context = click.make_pass_decorator(Context, ensure=True)
 
 
 @click.command(cls=ComplexCLI, context_settings=CONTEXT_SETTINGS)
-@click.version_option(config.VERSION)
+@click.version_option(VERSION)
 @click.option('-v', '--verbose', help='Enables verbose mode', default=None, count=True)
 @click.option('--home', help='home path to save scannes', default=None, type=click.Path(writable=True))
 @click.option('-p', '--project', help='project name to store result in', default=None, type=str)
 @pass_context
-def cli(ctx, verbose, home, project):
+def cli(ctx: Context, verbose, home, project):
     """Welcome to vm-hack"""
     if verbose != None:
         ctx.verbose = verbose
