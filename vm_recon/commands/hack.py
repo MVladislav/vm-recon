@@ -73,9 +73,9 @@ def tls(ctx: Context, domain):
 @cli.command()
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
 @click.option('-udp', is_flag=True, help='enables udp port scan instead of tcp')
-@click.option('-o', '--options', type=str, help='options to scan with (comma seperated)', default=None)
+@click.option('-o', '--options', type=str, help='options to scan with (comma seperated) [None]', default=None)
 @click.option('-oa', '--options_append', is_flag=True, help='append new options to existing option list')
-@click.option('-r', '--rate', type=int, help='rate to scan ports for', default=1000)
+@click.option('-r', '--rate', type=int, help='rate to scan ports for [1000]', default=1000)
 @pass_context
 def nmap(ctx: Context, host, udp, options, options_append, rate):
     '''NMAP scan'''
@@ -99,8 +99,8 @@ def nmap(ctx: Context, host, udp, options, options_append, rate):
 
 @cli.command()
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
-@click.option('-m', '--mode', type=click.Choice(['dir', 'vhost', 'fuzz', 'dns', 'bak']), help='type to scan for', default='dir')
-@click.option('-t', '--threads', type=int, help='thrads to use', default=10)
+@click.option('-m', '--mode', type=click.Choice(['dir', 'vhost', 'fuzz', 'dns', 'bak']), help='type to scan for [dir]', default='dir')
+@click.option('-t', '--threads', type=int, help='thrads to use [10]', default=10)
 @click.option('-w', '--wordlist', type=str, help='wordlist to use')
 @pass_context
 def gobuster(ctx: Context, host, mode, threads, wordlist):
@@ -141,7 +141,7 @@ def kitrunner(ctx: Context, host, type, thread, wordlist):
 
 @cli.command()
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
-@click.option('-s', '--silent', type=click.Choice(['1', '2', '3']), help='silent mode', default="3")
+@click.option('-s', '--silent', type=click.Choice(['1', '2', '3']), help='silent mode [3]', default="3")
 @pass_context
 def whatweb(ctx: Context, host, silent):
     '''WHATWEB scan'''
@@ -182,12 +182,12 @@ def wpscan(ctx: Context, host, silent):
 @cli.command()
 @click.option('-d', '--domain', type=str, help='domain to scan for', required=True)
 @click.option('-o', '--org', type=str, help='org to scan for', required=True)
-@click.option('-n', '--nameserver', type=str, help='the DNS server to use (1.1.1.1)', default="1.1.1.1")
+@click.option('-n', '--nameserver', type=str, help='the DNS server to use [1.1.1.1]', default="1.1.1.1")
 @click.option('-m', '--mode', type=click.Choice(
     ['gospider', 'hakrawler', 'emailfinder', 'subfinder', 'censys', 'amass_whois', 'amass_org', 'passive', 'active', 'gau']),
-    help='recon tool to use', default="gospider")
-@click.option('-t', '--threads', type=int, help='threads to use', default=10)
-@click.option('-dp', '--depth', type=int, help='depth to scan for', default=2)
+    help='recon tool to use (gospider)', default="gospider")
+@click.option('-t', '--threads', type=int, help='threads to use [10]', default=10)
+@click.option('-dp', '--depth', type=int, help='depth to scan for [2]', default=2)
 @pass_context
 def recon(ctx: Context, domain, org, mode, threads, depth, ns):
     '''
