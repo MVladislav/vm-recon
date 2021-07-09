@@ -59,22 +59,22 @@ class HackService:
             ])
         elif mode == "amass_whois":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['amass', 'intel', '-d', domain, '-whois', '-rf', ns, '-o', f'{path}/amass_whois'],
+                ['amass', 'intel', '-d', domain, '-whois', '-r', ns, '-o', f'{path}/amass_whois'],
                 ['tee', f'{path}/amass_whois.log']
             ])
         elif mode == "amass_org":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['amass', 'intel', '-org', org, '-rf', ns, '-o', f'{path}/amass_org'],
+                ['amass', 'intel', '-org', org, '-r', ns, '-o', f'{path}/amass_org'],
                 ['tee', f'{path}/amass_org.log']
             ])
         elif mode == "passive":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['amass', 'enum', '-passive', '-d', domain, '-rf', ns, '-o', f'{path}/amass_passive'],
+                ['amass', 'enum', '-passive', '-d', domain, '-r', ns, '-o', f'{path}/amass_passive'],
                 ['tee', f'{path}/amass_passive.log']
             ])
         elif mode == "active":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['amass', 'enum', '-active', '-src', '-ip', '-brute', '-min-for-recursive', str(depth), '-d', domain, '-rf', ns, '-o', f'{path}/amass_active'],
+                ['amass', 'enum', '-active', '-src', '-ip', '-brute', '-min-for-recursive', str(depth), '-d', domain, '-r', ns, '-o', f'{path}/amass_active'],
                 ['tee', f'{path}/amass_active.log']
             ])
         elif mode == "gau":
