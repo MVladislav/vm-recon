@@ -189,7 +189,7 @@ def wpscan(ctx: Context, host, silent):
 @click.option('-t', '--threads', type=int, help='threads to use [10]', default=10)
 @click.option('-dp', '--depth', type=int, help='depth to scan for [2]', default=2)
 @pass_context
-def recon(ctx: Context, domain, org, mode, threads, depth, ns):
+def recon(ctx: Context, domain, org, mode, threads, depth, nameserver):
     '''
         RECON scan
         HINT:
@@ -197,7 +197,7 @@ def recon(ctx: Context, domain, org, mode, threads, depth, ns):
     '''
     hack: HackService = ctx.hack
     try:
-        hack.recon(domain=domain, org=org, mode=mode, threads=threads, depth=depth, ns=ns)
+        hack.recon(domain=domain, org=org, mode=mode, threads=threads, depth=depth, ns=nameserver)
     except KeyboardInterrupt as k:
         hack.utils.logging.debug(f"process interupted! ({k})")
         sys.exit(5)
