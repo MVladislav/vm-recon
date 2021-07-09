@@ -189,7 +189,11 @@ def wpscan(ctx: Context, host, silent):
 @click.option('-dp', '--depth', type=int, help='depth to scan for', default=2)
 @pass_context
 def recon(ctx: Context, domain, org, mode, threads, depth):
-    '''RECON scan'''
+    '''
+        RECON scan
+        HINT:
+            - in some cases, the domain, need a http:// or https://
+    '''
     hack: HackService = ctx.hack
     try:
         hack.recon(domain=domain, org=org, mode=mode, threads=threads, depth=depth)
