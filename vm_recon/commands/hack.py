@@ -182,13 +182,14 @@ def wpscan(ctx: Context, host, silent):
 @cli.command()
 @click.option('-d', '--domain', type=str, help='domain to scan for', required=True)
 @click.option('-o', '--org', type=str, help='org to scan for', required=True)
+@click.option('-n', '--nameserver', type=str, help='the DNS server to use (1.1.1.1)', default="1.1.1.1")
 @click.option('-m', '--mode', type=click.Choice(
     ['gospider', 'hakrawler', 'emailfinder', 'subfinder', 'censys', 'amass_whois', 'amass_org', 'passive', 'active', 'gau']),
     help='recon tool to use', default="gospider")
 @click.option('-t', '--threads', type=int, help='threads to use', default=10)
 @click.option('-dp', '--depth', type=int, help='depth to scan for', default=2)
 @pass_context
-def recon(ctx: Context, domain, org, mode, threads, depth):
+def recon(ctx: Context, domain, org, mode, threads, depth, ns):
     '''
         RECON scan
         HINT:
@@ -196,7 +197,7 @@ def recon(ctx: Context, domain, org, mode, threads, depth):
     '''
     hack: HackService = ctx.hack
     try:
-        hack.recon(domain=domain, org=org, mode=mode, threads=threads, depth=depth)
+        hack.recon(domain=domain, org=org, mode=mode, threads=threads, depth=depth, ns=ns)
     except KeyboardInterrupt as k:
         hack.utils.logging.debug(f"process interupted! ({k})")
         sys.exit(5)

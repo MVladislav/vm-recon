@@ -21,7 +21,7 @@ class HackService:
     #
     # --------------------------------------------------------------------------
 
-    def recon(self, domain: str, org: str, mode: str = "gospider", threads: int = 10, depth: int = 2) -> None:
+    def recon(self, domain: str, org: str, mode: str = "gospider", threads: int = 10, depth: int = 2, ns: str = "1.1.1.1") -> None:
         self.utils.log_runBanner('RECON')
         path = self.utils.create_service_folder(f'{self.utils.slugify(domain)}/scan/recon')
         self.utils.logging.debug(f'new folder created:: {path}')
@@ -59,22 +59,22 @@ class HackService:
             ])
         elif mode == "amass_whois":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['amass', 'intel', '-d', domain, '-whois', '-o', f'{path}/amass_whois'],
+                ['amass', 'intel', '-d', domain, '-whois', '-rf', ns, '-o', f'{path}/amass_whois'],
                 ['tee', f'{path}/amass_whois.log']
             ])
         elif mode == "amass_org":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['amass', 'intel', '-org', org, '-o', f'{path}/amass_org'],
+                ['amass', 'intel', '-org', org, '-rf', ns, '-o', f'{path}/amass_org'],
                 ['tee', f'{path}/amass_org.log']
             ])
         elif mode == "passive":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['amass', 'enum', '-passive', '-d', domain, '-o', f'{path}/amass_passive'],
+                ['amass', 'enum', '-passive', '-d', domain, '-rf', ns, '-o', f'{path}/amass_passive'],
                 ['tee', f'{path}/amass_passive.log']
             ])
         elif mode == "active":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['amass', 'enum', '-active', '-src', '-ip', '-brute', '-min-for-recursive', '2', '-d', domain, '-o', f'{path}/amass_active'],
+                ['amass', 'enum', '-active', '-src', '-ip', '-brute', '-min-for-recursive', str(depth), '-d', domain, '-rf', ns, '-o', f'{path}/amass_active'],
                 ['tee', f'{path}/amass_active.log']
             ])
         elif mode == "gau":
