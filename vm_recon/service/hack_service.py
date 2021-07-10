@@ -1,4 +1,10 @@
+from pathlib import Path
+
+import yaml
+
 from ..cli import Context
+from ..config import (SUBFINDER_CENSYS_SECRET, SUBFINDER_CENSYS_USERNAME,
+                      SUBFINDER_SHODAN_API_KEY)
 from ..utilities.utils import Utils
 
 # ------------------------------------------------------------------------------
@@ -13,7 +19,7 @@ class HackService:
     def __init__(self, ctx: Context):
         self.ctx: Context = ctx
         self.utils: Utils = self.ctx.utils
-        self.utils.logging.debug("hack-service is initiated")
+        self.utils.logging.debug('hack-service is initiated')
 
     # --------------------------------------------------------------------------
     #
@@ -26,9 +32,61 @@ class HackService:
         path = self.utils.create_service_folder(f'{self.utils.slugify(domain)}/scan/recon')
         self.utils.logging.debug(f'new folder created:: {path}')
 
-        wordlist = "wordlist.txt"
-        options_1 = ['--silent', '-t', '200', '--recursive', '-vv']
-        options_2 = ['-t', '100', '--recursive', '-b', '-w', wordlist, '--sources', 'censys', '--set-settings', 'CensysPages=2', '-vv']
+        sources = []
+        if mode == 'subfinder' or mode == 'censys':
+            self.utils.logging.debug('Create subfinder conf with keys...')
+            subfinder_config_path = f'{self.utils.get_user_path()}/.config/subfinder'
+            subfinder_config_file = 'config.yaml'
+
+            # sources.append('bufferover')
+            # sources.append('sitedossier')
+            sources.append('censys')
+            sources.append('shodan')
+            # sources.append('Binaryedge')
+            # sources.append('certspotter')
+            # sources.append('Chaos')
+            # sources.append('DnsDB')
+            sources.append('github')
+            # sources.append('Intelx')
+            # sources.append('passivetotal')
+            # sources.append('Recon.dev')
+            # sources.append('Robtex')
+            # sources.append('SecurityTrails')
+            # sources.append('Spyse')
+            # sources.append('Threatbook')
+            sources.append('virustotal')
+            # sources.append('Zoomeye')
+
+            data = {
+                'sources': sources,
+                'all-sources': sources,
+                'recursive': sources,
+                'censys': [f'{SUBFINDER_CENSYS_USERNAME}:{SUBFINDER_CENSYS_SECRET}'],
+                'shodan': [f'{SUBFINDER_SHODAN_API_KEY}'],
+                # 'virustotal': [f'{TODO}'],
+                # 'passivetotal': [f'{TODO},{TODO}'],
+                # 'securitytrails': [f'{TODO}'],
+                # 'binaryedge': [],
+                # 'certspotter': [],
+                # 'chaos': [],
+                # 'dnsdb': [],
+                # 'github': [],
+                # 'intelx': [],
+                # 'recon': [],
+                # 'robtex': [],
+                # 'spyse': [],
+                # 'threatbook': [],
+                # 'urlscan': [],
+                # 'zoomeye': [],
+            }
+            Path(subfinder_config_path).mkdir(parents=True, exist_ok=True)
+            with open(f'{subfinder_config_path}/{subfinder_config_file}', 'w') as file:
+                yaml.dump(data, file)
+                self.utils.logging.debug(f'... {subfinder_config_path}/{subfinder_config_file} ...')
+                self.utils.logging.debug('... subfinder conf with keys created')
+
+        options_1 = ['-t', str(threads), '--recursive', '-v', '-oJ', '-nW']
+        options_2 = ['-t', str(threads), '--recursive', '-v', '-oJ', '-nW', '--sources', ",".join(sources)]
 
         if mode == "gospider":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
@@ -49,12 +107,13 @@ class HackService:
             ])
         elif mode == "subfinder":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['subfinder', '-d', domain, '-o', f'{path}/subfinder_rec'] + options_1,
+                ['subfinder', '-d', domain, '-o', f'{path}/subfinder_rec', '-r', ns] + options_1,
+                ['httpx'],
                 ['tee', f'{path}/subfinder_rec.log']
             ])
-        elif mode == "censys":
+        elif mode == "subfinder_api":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['subfinder', '-d', domain, '-o', f'{path}/subfinder_censys'] + options_2,
+                ['subfinder', '-d', domain, '-o', f'{path}/subfinder_censys', '-r', ns] + options_2,
                 ['tee', f'{path}/subfinder_censys.log']
             ])
         elif mode == "amass_whois":
@@ -241,42 +300,42 @@ class HackService:
             self.utils.logging.warning('[-] No ports found')
 
     def gobuster(self, host: str, type: str = 'dir', threads: int = 10,
-                 w_list: str = None, extras: list = None) -> None:
+                 w_list: str = None, options: list = None) -> None:
         self.utils.log_runBanner('GOBUSTER')
         path = self.utils.create_service_folder(f'{self.utils.slugify(host)}/scan/gobuster')
         self.utils.logging.debug(f'new folder created:: {path}')
 
-        extras_b = ['-k', '-x', 'php,txt,html,js'] if extras == None else extras
+        options = ['-k', '-x', 'php,txt,html,js', '--wildcard'] if options == None else options
         wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
 
         if type == 'dir' or type == None:
             wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster dir', [
-                ['gobuster', 'dir', '-u', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_dir'] + extras_b,
+                ['gobuster', 'dir', '-u', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_dir'] + options,
                 ['tee', f'{path}/gobuster_dir.log']
             ])
         elif type == 'vhost':
             wordlist = '/opt/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster vhost', [
-                ['gobuster', 'vhost', '-u', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_vhost'] + extras_b,
+                ['gobuster', 'vhost', '-u', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_vhost'] + options,
                 ['tee', f'{path}/gobuster_vhost.log']
             ])
         elif type == 'fuzz':
             wordlist = '/opt/git/SecLists/Discovery/Web-Content/CMS/wordpress.fuzz.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster fuzz', [
-                ['gobuster', 'fuzz', '-u', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_fuzz'] + extras_b,
+                ['gobuster', 'fuzz', '-u', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_fuzz'] + options,
                 ['tee', f'{path}/gobuster_fuzz.log']
             ])
         elif type == 'dns':
             wordlist = '/opt/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster dns', [
-                ['gobuster', 'dns', '-d', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_dns'] + extras_b,
+                ['gobuster', 'dns', '-d', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_dns'] + options,
                 ['tee', f'{path}/gobuster_dns.log']
             ])
         elif type == 'bak':
             wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster bak', [
-                ['gobuster', 'dir', '-d', host, '-w', wordlist, '-d', '-r', '-t', str(threads), '-o', f'{path}/gobuster_back'] + extras_b,
+                ['gobuster', 'dir', '-d', host, '-w', wordlist, '-d', '-r', '-t', str(threads), '-o', f'{path}/gobuster_back'] + options,
                 ['tee', f'{path}/gobuster_back.log']
             ])
         else:
@@ -322,10 +381,10 @@ class HackService:
         path = self.utils.create_service_folder(f'{self.utils.slugify(host)}/scan/wpscan')
         self.utils.logging.debug(f'new folder created:: {path}')
 
-        mode = "aggressive" if silent == False else "passive"
+        mode = ['--plugins-detection', 'aggressive'] if silent == False else ['--plugins-detection', 'passive']
 
         cmd_result = self.utils.run_command_output_loop(f'wpscan {mode}', [
-            ['wpscan', '--url', host, '-e', 'ap', '--plugins-detection', mode, '-o', f'{path}/wpscan'],
+            ['wpscan', '--url', host, '-e', 'ap', '-o', f'{path}/wpscan'] + mode,
             ['tee', f'{path}/wpscan.log']
         ])
 
