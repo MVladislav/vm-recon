@@ -29,7 +29,7 @@ class HackService:
 
     def recon(self, domain: str, org: str, mode: str = "gospider", threads: int = 10, depth: int = 2, ns: str = "1.1.1.1") -> None:
         self.utils.log_runBanner('RECON')
-        path = self.utils.create_service_folder(f'{self.utils.slugify(domain)}/scan/recon')
+        path = self.utils.create_service_folder(f'scan/recon', domain)
         self.utils.logging.debug(f'new folder created:: {path}')
 
         sources = []
@@ -154,7 +154,7 @@ class HackService:
 
     def dns(self, host: str, ns: str = "ANY") -> None:
         self.utils.log_runBanner('DNS/DIG')
-        path = self.utils.create_service_folder(f'{self.utils.slugify(host)}/scan/dig')
+        path = self.utils.create_service_folder(f'scan/dig', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop('dig', [
@@ -185,7 +185,7 @@ class HackService:
         self.utils.logging.info(f'[*] DNS/DIG Done! View the log reports under {path}/')
 
         self.utils.log_runBanner('DNS/HOST')
-        path = self.utils.create_service_folder(f'{self.utils.slugify(host)}/scan/host')
+        path = self.utils.create_service_folder(f'scan/host', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop('host', [
@@ -197,7 +197,7 @@ class HackService:
 
     def tls(self, domain: str) -> None:
         self.utils.log_runBanner('TLS')
-        path = self.utils.create_service_folder(f'{self.utils.slugify(domain)}/scan/tls')
+        path = self.utils.create_service_folder(f'scan/tls', domain)
         self.utils.logging.debug(f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop('openssl [1/4]', [
@@ -230,7 +230,7 @@ class HackService:
     def nmap(self, host: str, udp: bool = True, ports=None,
              options: list = None, rate: int = 1000, path: str = None) -> None:
         self.utils.log_runBanner('NMAP')
-        path = self.utils.create_service_folder(f'{self.utils.slugify(host)}/scan/namp') if path == None else path
+        path = self.utils.create_service_folder(f'scan/namp', host) if path == None else path
         self.utils.logging.debug(f'new folder created:: {path}')
 
         options_b = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-sC', '--script=vuln', '-vv'] if options == None else options
@@ -272,7 +272,7 @@ class HackService:
 
     def masscan(self, host: str, rate: int = 10000, options: list = None) -> None:
         self.utils.log_runBanner('MASSCAN')
-        path = self.utils.create_service_folder(f'{self.utils.slugify(host)}/scan/masscan')
+        path = self.utils.create_service_folder(f'scan/masscan', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
         options_b = ['-p1-65535', '--rate', str(rate), '--wait', '0', '--open', '-vv'] if options == None else options
@@ -302,7 +302,7 @@ class HackService:
     def gobuster(self, host: str, type: str = 'dir', threads: int = 10,
                  w_list: str = None, options: list = None) -> None:
         self.utils.log_runBanner('GOBUSTER')
-        path = self.utils.create_service_folder(f'{self.utils.slugify(host)}/scan/gobuster')
+        path = self.utils.create_service_folder(f'scan/gobuster', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
         options = ['-k', '-x', 'php,txt,html,js', '--wildcard'] if options == None else options
@@ -345,7 +345,7 @@ class HackService:
 
     def kitrunner(self, host: str,  w_list: str = None) -> None:
         self.utils.log_runBanner('KITRUNNER')
-        path = self.utils.create_service_folder(f'{self.utils.slugify(host)}/scan/kr')
+        path = self.utils.create_service_folder(f'scan/kr', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
         wordlist = "/opt/git/kiterunner/routes.kite" if w_list == None else w_list
@@ -367,7 +367,7 @@ class HackService:
 
     def whatweb(self, host: str, silent: int = 3) -> None:
         self.utils.log_runBanner('WHATWEB')
-        path = self.utils.create_service_folder(f'{self.utils.slugify(host)}/scan/whatweb')
+        path = self.utils.create_service_folder(f'scan/whatweb', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop('whatweb silent', [
@@ -378,7 +378,7 @@ class HackService:
 
     def wpscan(self, host: str, silent: bool = False) -> None:
         self.utils.log_runBanner('WPSCAN')
-        path = self.utils.create_service_folder(f'{self.utils.slugify(host)}/scan/wpscan')
+        path = self.utils.create_service_folder(f'scan/wpscan', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
         mode = ['--plugins-detection', 'aggressive'] if silent == False else ['--plugins-detection', 'passive']
@@ -398,7 +398,7 @@ class HackService:
 
     def pwn(self, file: str) -> None:
         self.utils.log_runBanner('PWN')
-        path = self.utils.create_service_folder(f'{self.utils.slugify(file)}/pwn')
+        path = self.utils.create_service_folder(f'pwn/checks', file)
         self.utils.logging.debug(f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop(f'pwn file', [

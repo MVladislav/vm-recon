@@ -49,6 +49,12 @@ class Utils:
         self.logging.addHandler(logger.StreamHandler(sys.stdout))
         coloredlogs.install(level=log_level, fmt=log_format, logger=self.logging)
 
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        self.logging.debug(f'LOGGING-LEVEL : {self.ctx.verbose}')
+        self.logging.debug(f'PROJECT-PATH  : {self.create_service_path("host_example")}/')
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        print()
+
     # --------------------------------------------------------------------------
     #
     #
@@ -70,10 +76,23 @@ class Utils:
     def get_user_path(self) -> str:
         return str(Path.home())
 
-    def create_service_folder(self, name: str) -> str:
-        path = f'{self.ctx.base_path}{"" if self.ctx.project == None else f"/{self.ctx.project}"}/{name}'
+    def create_service_folder(self, name: str, host: str = None) -> str:
+        path = f'{self.create_serivce_path(host)}/{name}'
         self.create_folder(path)
         return path
+
+    def create_service_path(self, host: str = None):
+        if not self.ctx.disable_split_host:
+            host = self.slugify(host)
+            host = "" if host == None else f"/{host}"
+        else:
+            host = ""
+        if not self.ctx.disable_split_project:
+            project = "" if self.ctx.project == None else f"/{self.ctx.project}"
+        else:
+            project = ""
+
+        return f'{self.ctx.base_path}{project}{host}'
 
     # --------------------------------------------------------------------------
     #

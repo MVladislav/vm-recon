@@ -80,11 +80,13 @@ pass_context = click.make_pass_decorator(Context, ensure=True)
 
 @click.command(cls=ComplexCLI, context_settings=CONTEXT_SETTINGS)
 @click.version_option(VERSION)
-@click.option('-v', '--verbose', help='Enables verbose mode', default=None, count=True)
-@click.option('--home', help='home path to save scannes', default=None, type=click.Path(writable=True))
-@click.option('-p', '--project', help='project name to store result in', default=None, type=str)
+@click.option('-v', '--verbose', count=True, help='Enables verbose mode', default=None)
+@click.option('--home', type=click.Path(writable=True), help='home path to save scannes', default=None)
+@click.option('-p', '--project', type=str, help='project name to store result in', default=None)
+@click.option('--disable-split-project', is_flag=True, help='disable splitting folder struct by project')
+@click.option('--disable-split-host', is_flag=True, help='disable splitting folder struct by host')
 @pass_context
-def cli(ctx: Context, verbose, home, project):
+def cli(ctx: Context, verbose, home, project, disable_split_project, disable_split_host):
     """Welcome to vm-hack"""
     if verbose != None:
         ctx.verbose = verbose
@@ -92,4 +94,6 @@ def cli(ctx: Context, verbose, home, project):
         ctx.project = project
     if home != None:
         ctx.base_path = home
+    ctx.disable_split_project = disable_split_project
+    ctx.disable_split_host = disable_split_host
     ctx.utils = Utils(ctx)
