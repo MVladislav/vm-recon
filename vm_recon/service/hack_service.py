@@ -228,12 +228,10 @@ class HackService:
     # --------------------------------------------------------------------------
 
     def nmap(self, host: str, udp: bool = True, ports=None,
-             options: list = None, rate: int = 1000, path: str = None) -> None:
+             options: list = [], rate: int = 1000, path: str = None) -> None:
         self.utils.log_runBanner('NMAP')
         path = self.utils.create_service_folder(f'scan/namp', host) if path == None else path
         self.utils.logging.debug(f'new folder created:: {path}')
-
-        options_b = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-sC', '--script=vuln', '-vv'] if options == None else options
 
         if ports == None:
             if udp:
@@ -255,7 +253,7 @@ class HackService:
 
         if ports != None:
             cmd_result = self.utils.run_command_output_loop('nmap scan', [
-                ['sudo', 'nmap', host, '-p', ports, '-oX', f'{path}/inital.xml', '-oN', f'{path}/inital.log'] + options_b
+                ['sudo', 'nmap', host, '-p', ports, '-oX', f'{path}/inital.xml', '-oN', f'{path}/inital.log'] + options
             ])
 
             cmd_result = self.utils.run_command_output_loop('nmap convert xls', [
@@ -270,15 +268,13 @@ class HackService:
         else:
             self.utils.logging.warning('[-] No ports found')
 
-    def masscan(self, host: str, rate: int = 10000, options: list = None) -> None:
+    def masscan(self, host: str, rate: int = 10000, options: list = []) -> None:
         self.utils.log_runBanner('MASSCAN')
         path = self.utils.create_service_folder(f'scan/masscan', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
-        options_b = ['-p1-65535', '--rate', str(rate), '--wait', '0', '--open', '-vv'] if options == None else options
-
         cmd_result = self.utils.run_command_output_loop('masscan', [
-            ['sudo', 'masscan', host, '-oX', f'{path}/masscan.xml'] + options_b
+            ['sudo', 'masscan', host, '-oX', f'{path}/masscan.xml'] + options
         ])
         cmd_result = self.utils.run_command_output_loop('xsltproc', [
             ['xsltproc', '-o', f'{path}/final-masscan.html', '/opt/git/nmap-bootstrap-xsl/nmap-bootstrap.xsl', f'{path}/masscan.xml']
@@ -300,12 +296,11 @@ class HackService:
             self.utils.logging.warning('[-] No ports found')
 
     def gobuster(self, host: str, type: str = 'dir', threads: int = 10,
-                 w_list: str = None, options: list = None) -> None:
+                 w_list: str = None, options: list = []) -> None:
         self.utils.log_runBanner('GOBUSTER')
         path = self.utils.create_service_folder(f'scan/gobuster', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
-        options = ['-k', '-x', 'php,txt,html,js', '--wildcard'] if options == None else options
         # wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
         wordlist = '/opt/git/SecLists/Discovery/Web-Content/raft-medium-words.txt' if w_list == None else w_list
 
@@ -359,6 +354,46 @@ class HackService:
         ])
 
         self.utils.logging.info(f'[*] KITRUNNER Done! View the log reports under {path}/')
+
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
+
+    def smb(self, host: str, port: int = 445):
+        self.utils.log_runBanner('SMB')
+        path = self.utils.create_service_folder(f'scan/smb', host)
+        self.utils.logging.debug(f'new folder created:: {path}')
+
+        # SMBCLIENT ############################################################
+        ########################################################################
+        cmd_result = self.utils.run_command_output_loop('nmap scan', [
+            ['smbclient', '-N', '-L', f'//{host}'],
+            ['tee', f'{path}/smbclient.log']
+        ])
+
+        print('')
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        self.utils.logging.notice('use "smbclient //{host}/..." to check the results')
+        self.utils.logging.notice('usefull commands "dir,get,put,..."')
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        print('')
+
+        # NMAP #################################################################
+        ########################################################################
+        options = ['--script', 'smb-vuln-*,smb-os-discovery']
+        cmd_result = self.utils.run_command_output_loop('nmap scan', [
+            ['sudo', 'nmap', host, '-p', str(port), '-oX', f'{path}/smb_nmap.xml', '-oN', f'{path}/smb_nmap.log'] + options
+        ])
+        cmd_result = self.utils.run_command_output_loop('nmap convert xls', [
+            ['nmap-converter.py', f'{path}/smb_nmap.xml', '-o', f'{path}/smb_nmap.xls']
+        ])
+        cmd_result = self.utils.run_command_output_loop('nmap convert html', [
+            ['xsltproc', f'{path}/smb_nmap.xml', '-o', f'{path}/smb_nmap.html']
+        ])
+
+        self.utils.logging.info(f'[*] SMB Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #

