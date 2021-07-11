@@ -102,7 +102,7 @@ def nmap(ctx: Context, host, udp, options, options_append, rate):
 @click.option('-m', '--mode', type=click.Choice(['dir', 'vhost', 'fuzz', 'dns', 'bak']), help='type to scan for [dir]', default='dir')
 @click.option('-t', '--threads', type=int, help='thrads to use [10]', default=10)
 @click.option('-w', '--wordlist', type=str, help='wordlist to use')
-@click.option('-o', '--options', type=str, help='options to scan with (comma seperated) [None]', default=None)
+@click.option('-o', '--options', type=str, help='options to scan with (comma seperated) [["-k", "-x", "php,txt,html,js", "--wildcard"]]', default=None)
 @click.option('-oa', '--options_append', is_flag=True, help='append new options to existing option list')
 @pass_context
 def gobuster(ctx: Context, host, mode, threads, wordlist, options, options_append):

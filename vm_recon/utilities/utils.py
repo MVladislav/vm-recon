@@ -77,7 +77,7 @@ class Utils:
         return str(Path.home())
 
     def create_service_folder(self, name: str, host: str = None) -> str:
-        path = f'{self.create_serivce_path(host)}/{name}'
+        path = f'{self.create_service_path(host)}/{name}'
         self.create_folder(path)
         return path
 

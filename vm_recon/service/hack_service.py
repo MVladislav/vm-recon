@@ -306,7 +306,8 @@ class HackService:
         self.utils.logging.debug(f'new folder created:: {path}')
 
         options = ['-k', '-x', 'php,txt,html,js', '--wildcard'] if options == None else options
-        wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
+        # wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
+        wordlist = '/opt/git/SecLists/Discovery/Web-Content/raft-medium-words.txt' if w_list == None else w_list
 
         if type == 'dir' or type == None:
             wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list

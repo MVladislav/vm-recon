@@ -29,12 +29,36 @@ def cli(ctx: Context):
 
 
 @cli.command()
+@click.option('-p', '--port', type=int, help='port to open on', required=True)
 @click.pass_context
-def nc(ctx: Context):
-    '''TEST scan'''
+def nc(ctx: Context, port):
+    '''NC LISTENER'''
     hack: ToolService = ctx.obj.hack
     try:
-        hack.nc()
+        hack.nc(port=port)
+    except KeyboardInterrupt as k:
+        hack.utils.logging.debug(f"process interupted! ({k})")
+        sys.exit(5)
+    except Exception as e:
+        hack.utils.logging.exception(e)
+        sys.exit(2)
+
+# ------------------------------------------------------------------------------
+#
+#
+#
+# ------------------------------------------------------------------------------
+
+
+@cli.command()
+@click.option('-d', '--host', type=str, help='LHOST to connect back', required=True)
+@click.option('-p', '--port', type=int, help='LPORT to connect back', required=True)
+@click.pass_context
+def msfvenom(ctx: Context, host, port):
+    '''MSFVENOM creator'''
+    hack: ToolService = ctx.obj.hack
+    try:
+        hack.msfvenom(host=host, port=port)
     except KeyboardInterrupt as k:
         hack.utils.logging.debug(f"process interupted! ({k})")
         sys.exit(5)
