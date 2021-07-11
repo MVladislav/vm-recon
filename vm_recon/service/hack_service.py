@@ -28,7 +28,8 @@ class HackService:
     # --------------------------------------------------------------------------
 
     def recon(self, domain: str, org: str, mode: str = "gospider", threads: int = 10, depth: int = 2, ns: str = "1.1.1.1") -> None:
-        self.utils.log_runBanner('RECON')
+        service_name = 'RECON'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/recon', domain)
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -144,7 +145,7 @@ class HackService:
                 ['tee', f'{path}/gau.log']
             ])
 
-        self.utils.logging.info(f'[*] RECON Done! View the log reports under {path}/')
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -153,7 +154,8 @@ class HackService:
     # --------------------------------------------------------------------------
 
     def dns(self, host: str, ns: str = "ANY") -> None:
-        self.utils.log_runBanner('DNS/DIG')
+        service_name = 'DNS/DIG'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/dig', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -182,9 +184,10 @@ class HackService:
             ['tee', f'{path}/dig_dns_axfr_multi.log '],
         ])
 
-        self.utils.logging.info(f'[*] DNS/DIG Done! View the log reports under {path}/')
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
-        self.utils.log_runBanner('DNS/HOST')
+        service_name = 'DNS/HOST'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/host', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -193,10 +196,11 @@ class HackService:
             ['tee', f'{path}/host.log'],
         ])
 
-        self.utils.logging.info(f'[*] DNS/HOST Done! View the log reports under {path}/')
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
     def tls(self, domain: str) -> None:
-        self.utils.log_runBanner('TLS')
+        service_name = 'TLS'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/tls', domain)
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -219,7 +223,7 @@ class HackService:
             ['tee', f'{path}/openssl_fingerprint.log']
         ])
 
-        self.utils.logging.info(f'[*] TLS Done! View the log reports under {path}/')
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -229,7 +233,8 @@ class HackService:
 
     def nmap(self, host: str, udp: bool = True, ports=None,
              options: list = [], rate: int = 1000, path: str = None) -> None:
-        self.utils.log_runBanner('NMAP')
+        service_name = 'NMAP'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/namp', host) if path == None else path
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -263,13 +268,13 @@ class HackService:
                 ['xsltproc', f'{path}/inital.xml', '-o', f'{path}/inital.html']
             ])
 
-            self.utils.logging.info(f'[*] NMAP Done! View the HTML report at {path}/inital.html')
-            self.utils.logging.info(f'[*] NMAP Done! View the XLS  report at {path}/inital.xls')
+            self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
         else:
             self.utils.logging.warning('[-] No ports found')
 
     def masscan(self, host: str, rate: int = 10000, options: list = []) -> None:
-        self.utils.log_runBanner('MASSCAN')
+        service_name = 'MASSCAN'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/masscan', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -289,7 +294,7 @@ class HackService:
         ])
 
         if ports != None:
-            self.utils.logging.info(f'[*] MASSCAN Done! View the log reports under {path}/')
+            self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
             n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv']
             self.nmap(host=host, ports=ports, options=n_options, path=path)
         else:
@@ -297,7 +302,8 @@ class HackService:
 
     def gobuster(self, host: str, type: str = 'dir', threads: int = 10,
                  w_list: str = None, options: list = []) -> None:
-        self.utils.log_runBanner('GOBUSTER')
+        service_name = 'GOBUSTER'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/gobuster', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -337,10 +343,11 @@ class HackService:
         else:
             self.utils.logging.warning(f'gobuster type "{type}" not defined')
 
-        self.utils.logging.info(f'[*] GOBUSTER Done! View the log reports under {path}/')
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
     def kitrunner(self, host: str,  w_list: str = None) -> None:
-        self.utils.log_runBanner('KITRUNNER')
+        service_name = 'KITRUNNER'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/kr', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -353,7 +360,7 @@ class HackService:
             ['tee', f'{path}/kr_scan.log']
         ])
 
-        self.utils.logging.info(f'[*] KITRUNNER Done! View the log reports under {path}/')
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -362,7 +369,8 @@ class HackService:
     # --------------------------------------------------------------------------
 
     def smb(self, host: str, port: int = 445):
-        self.utils.log_runBanner('SMB')
+        service_name = 'SMB'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/smb', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -393,7 +401,7 @@ class HackService:
             ['xsltproc', f'{path}/smb_nmap.xml', '-o', f'{path}/smb_nmap.html']
         ])
 
-        self.utils.logging.info(f'[*] SMB Done! View the log reports under {path}/')
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -402,7 +410,8 @@ class HackService:
     # --------------------------------------------------------------------------
 
     def whatweb(self, host: str, silent: int = 3) -> None:
-        self.utils.log_runBanner('WHATWEB')
+        service_name = 'WHATWEB'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/whatweb', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -410,10 +419,11 @@ class HackService:
             ['whatweb', host, '-a', str(silent), '-v', f'--log-verbose={path}/whatweb_v.log', f'--log-json={path}/whatweb_j.log']
         ])
 
-        self.utils.logging.info(f'[*] WHATWEB Done! View the log reports under {path}/')
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
     def wpscan(self, host: str, silent: bool = False) -> None:
-        self.utils.log_runBanner('WPSCAN')
+        service_name = 'WPSCAN'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/wpscan', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -424,7 +434,7 @@ class HackService:
             ['tee', f'{path}/wpscan.log']
         ])
 
-        self.utils.logging.info(f'[*] WPSCAN Done! View the log reports under {path}/')
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -433,7 +443,8 @@ class HackService:
     # --------------------------------------------------------------------------
 
     def pwn(self, file: str) -> None:
-        self.utils.log_runBanner('PWN')
+        service_name = 'PWN'
+        self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'pwn/checks', file)
         self.utils.logging.debug(f'new folder created:: {path}')
 
@@ -450,7 +461,7 @@ class HackService:
             ['tee', f'{path}/checksec.log']
         ])
 
-        self.utils.logging.info(f'[*] PWN Done! View the log reports under {path}/')
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
 # ------------------------------------------------------------------------------
 #
