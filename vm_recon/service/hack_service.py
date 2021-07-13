@@ -323,7 +323,7 @@ class HackService:
                 ['tee', f'{path}/gobuster_vhost.log']
             ])
         elif type == 'fuzz':
-            wordlist = '/opt/git/SecLists/Discovery/Web-Content/CMS/wordpress.fuzz.txt' if w_list == None else w_list
+            wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster fuzz', [
                 ['gobuster', 'fuzz', '-u', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_fuzz'] + options,
                 ['tee', f'{path}/gobuster_fuzz.log']

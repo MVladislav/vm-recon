@@ -106,7 +106,11 @@ def nmap(ctx: Context, host, udp, options, options_append, rate):
 @click.option('-oa', '--options_append', is_flag=True, help='append new options to existing option list')
 @pass_context
 def gobuster(ctx: Context, host, mode, threads, wordlist, options, options_append):
-    '''GOBUSTER scan'''
+    '''
+        GOBUSTER scan\n
+        HINT:\n
+            - FUZZ: write host with "FUZZ" in it
+    '''
     hack: HackService = ctx.hack
     try:
         if options != None and not options_append:
@@ -189,7 +193,7 @@ def whatweb(ctx: Context, host, silent):
 
 @cli.command()
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
-@click.option('-s', '-silent', is_flag=True, help='silent mode')
+@click.option('-s', '--silent', is_flag=True, help='silent mode')
 @pass_context
 def wpscan(ctx: Context, host, silent):
     '''WPSCAN scan'''
@@ -222,8 +226,8 @@ def wpscan(ctx: Context, host, silent):
 @pass_context
 def recon(ctx: Context, domain, org, mode, threads, depth, nameserver):
     '''
-        RECON scan
-        HINT:
+        RECON scan\n
+        HINT:\n
             - in some cases, the domain, need a http:// or https://
     '''
     hack: HackService = ctx.hack
