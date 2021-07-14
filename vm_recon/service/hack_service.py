@@ -301,7 +301,7 @@ class HackService:
             self.utils.logging.warning('[-] No ports found')
 
     def gobuster(self, host: str, type: str = 'dir', threads: int = 10,
-                 w_list: str = None, options: list = []) -> None:
+                 w_list: str = None, options: list = [], exclude_length: int = None) -> None:
         service_name = 'GOBUSTER'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/gobuster', host)
@@ -309,6 +309,9 @@ class HackService:
 
         # wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
         wordlist = '/opt/git/SecLists/Discovery/Web-Content/raft-medium-words.txt' if w_list == None else w_list
+
+        if exclude_length != None:
+            options + ['--exclude-length', exclude_length]
 
         if type == 'dir' or type == None:
             wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
@@ -323,7 +326,13 @@ class HackService:
                 ['tee', f'{path}/gobuster_vhost.log']
             ])
         elif type == 'fuzz':
-            wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
+            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
+            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/Apache.fuzz.txt' if w_list == None else w_list
+            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/ApacheTomcat.fuzz.txt' if w_list == None else w_list
+            wordlist = '/opt/git/SecLists/Discovery/Web-Content/FatwireCMS.fuzz.txt' if w_list == None else w_list
+            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/CMS/wordpress.fuzz.txt' if w_list == None else w_list
+            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/CMS/wp-plugins.fuzz.txt' if w_list == None else w_list
+            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/CMS/wp-themes.fuzz.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster fuzz', [
                 ['gobuster', 'fuzz', '-u', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_fuzz'] + options,
                 ['tee', f'{path}/gobuster_fuzz.log']

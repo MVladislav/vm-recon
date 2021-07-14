@@ -5,6 +5,8 @@ import click
 from ..cli import Context, pass_context
 from ..service.hack_service import HackService
 
+default_split_by = ';'
+
 # ------------------------------------------------------------------------------
 #
 #
@@ -73,20 +75,22 @@ def tls(ctx: Context, domain):
 @cli.command()
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
 @click.option('-udp', is_flag=True, help='enables udp port scan instead of tcp')
-@click.option('-o', '--options', type=str, help='options to scan with (comma seperated) [None]', default=None)
+@click.option('-o', '--options', type=str, help=f'options to scan with (seperated by "{default_split_by}") [None]', default=None)
 @click.option('-oa', '--options_append', is_flag=True, help='append new options to existing option list')
 @click.option('-r', '--rate', type=int, help='rate to scan ports for [1000]', default=1000)
+@click.option('-s', '--silent-mode', type=int, help='value to use in -T* [4]', default=4)
 @pass_context
-def nmap(ctx: Context, host, udp, options, options_append, rate):
+def nmap(ctx: Context, host, udp, options, options_append, rate, silent_mode):
     '''NMAP scan'''
     hack: HackService = ctx.hack
     try:
+
         if options != None and not options_append:
-            options = options.split(',')
+            options = options.split(default_split_by)
         elif options != None and options_append:
-            options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-sC', '--script=vuln', '-vv'] + options.split(',')
+            options = ['-sS', '-sV', '-O', f'-T{silent_mode}', '-PE', '-Pn', '-n', '--open', '-sC', '--script=vuln', '-vv'] + options.split(default_split_by)
         else:
-            options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-sC', '--script=vuln', '-vv']
+            options = ['-sS', '-sV', '-O', f'-T{silent_mode}', '-PE', '-Pn', '-n', '--open', '-sC', '--script=vuln', '-vv']
 
         hack.nmap(host=host, udp=udp, options=options, rate=rate)
     except KeyboardInterrupt as k:
@@ -102,23 +106,29 @@ def nmap(ctx: Context, host, udp, options, options_append, rate):
 @click.option('-m', '--mode', type=click.Choice(['dir', 'vhost', 'fuzz', 'dns', 'bak']), help='type to scan for [dir]', default='dir')
 @click.option('-t', '--threads', type=int, help='thrads to use [10]', default=10)
 @click.option('-w', '--wordlist', type=str, help='wordlist to use')
-@click.option('-o', '--options', type=str, help='options to scan with (comma seperated) [["-k", "-x", "php,txt,html,js"]]', default=None)
+@click.option('-o', '--options', type=str, help=f'options to scan with (seperated by "{default_split_by}") ["-k", "-r", "--random-agent"]', default=None)
 @click.option('-oa', '--options_append', is_flag=True, help='append new options to existing option list')
 @pass_context
 def gobuster(ctx: Context, host, mode, threads, wordlist, options, options_append):
     '''
         GOBUSTER scan\n
         HINT:\n
-            - FUZZ: write host with "FUZZ" in it
+            - FUZZ: write host with "FUZZ" in it\n
+            - Try also with:\n
+                - "-x;php,txt,html,js"\n
+                - "-f"\n
+                - "-c;..."
     '''
     hack: HackService = ctx.hack
     try:
+        # '-x', 'php,txt,html,js',
+
         if options != None and not options_append:
-            options = options.split(',')
+            options = options.split(default_split_by)
         elif options != None and options_append:
-            options = ['-k', '-x', 'php,txt,html,js'] + options.split(',')
+            options = ['-k', '-r', '--random-agent'] + options.split(default_split_by)
         else:
-            options = ['-k', '-x', 'php,txt,html,js']
+            options = ['-k', '-r', '--random-agent']
 
         hack.gobuster(host=host, type=mode, threads=threads, w_list=wordlist, options=options)
     except KeyboardInterrupt as k:
