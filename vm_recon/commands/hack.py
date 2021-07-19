@@ -143,7 +143,7 @@ def gobuster(ctx: Context, host, mode, threads, wordlist, options, options_appen
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
 @click.option('-w', '--wordlist', type=str, help='wordlist to use')
 @pass_context
-def kitrunner(ctx: Context, host, type, thread, wordlist):
+def kitrunner(ctx: Context, host, wordlist):
     '''KITRUNNER scan'''
     hack: HackService = ctx.hack
     try:
