@@ -346,7 +346,7 @@ class HackService:
         elif type == 'bak':
             wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster bak', [
-                ['gobuster', 'dir', '-d', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_back'] + options,
+                ['gobuster', 'dir', '-u', host, '-w', wordlist, '-d', '-r', '-t', str(threads), '-o', f'{path}/gobuster_back'] + options,
                 ['tee', f'{path}/gobuster_back.log']
             ])
         else:
