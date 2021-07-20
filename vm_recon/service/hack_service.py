@@ -27,6 +27,25 @@ class HackService:
     #
     # --------------------------------------------------------------------------
 
+    def clone_page(self, host: str) -> None:
+        service_name = 'RECON'
+        self.utils.log_runBanner(service_name)
+        path = self.utils.create_service_folder(f'page', host)
+        self.utils.logging.debug(f'new folder created:: {path}')
+
+        cmd_result = self.utils.run_command_output_loop(f'clone page {host}', [
+            ['wget', '-r', '-nHp', host, '-P', path],
+            ['tee', f'{path}/page_clone.log']
+        ])
+
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
+
     def recon(self, domain: str, org: str, mode: str = "gospider", threads: int = 10, depth: int = 2, ns: str = "1.1.1.1") -> None:
         service_name = 'RECON'
         self.utils.log_runBanner(service_name)

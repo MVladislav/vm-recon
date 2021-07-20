@@ -114,10 +114,19 @@ def gobuster(ctx: Context, host, mode, threads, wordlist, options, options_appen
         GOBUSTER scan\n
         HINT:\n
             - FUZZ: write host with "FUZZ" in it\n
+            - WORDLIST:\n
+                - /opt/git/SecLists/Discovery/Web-Content/raft-medium-words.txt\n
+                - /opt/git/SecLists/Discovery/Web-Content/big.txt\n
+                - /opt/git/SecLists/Discovery/Web-Content/Apache.fuzz.txt\n
+                - /opt/git/SecLists/Discovery/Web-Content/big.txt\n
+                - /opt/git/SecLists/Fuzzing/LFI/LFI-gracefulsecurity-linux.txt\n
+                - /opt/git/SecLists/Fuzzing/LFI/LFI-Jhaddix.txt\n
+                - /opt/git/SecLists/Fuzzing/big-list-of-naughty-strings.txt\n
             - Try also with:\n
-                - "-x;php,txt,html,js"\n
+                - "-x;php,txt,html,js,log,bak"\n
                 - "-f"\n
-                - "-c;..."
+                - "-c;..."\n
+                - "--exclude-length;15349"
     '''
     hack: HackService = ctx.hack
     try:
