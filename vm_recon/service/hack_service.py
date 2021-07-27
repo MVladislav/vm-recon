@@ -257,10 +257,12 @@ class HackService:
         path = self.utils.create_service_folder(f'scan/namp', host) if path == None else path
         self.utils.logging.debug(f'new folder created:: {path}')
 
+        host = host.split(" ")
+
         if ports == None:
             if udp:
                 ports = self.utils.run_command_output_loop('nmap udp ports', [
-                    ['sudo', 'nmap', '-sU', '-p-', f'--min-rate={rate}', '-T4', host],
+                    ['sudo', 'nmap', '-sU', '-p-', f'--min-rate={rate}', '-T4'] + host,
                     ['grep', '^[0-9]'],
                     ['cut', '-d', '/', '-f', '1', ],
                     ['tr', '\\n', ',', ],
@@ -268,7 +270,7 @@ class HackService:
                 ])
             else:
                 ports = self.utils.run_command_output_loop('nmap tcp ports', [
-                    ['sudo', 'nmap', '-p-', f'--min-rate={rate}', '-T4', host],
+                    ['sudo', 'nmap', '-p-', f'--min-rate={rate}', '-T4'] + host,
                     ['grep', '^[0-9]'],
                     ['cut', '-d', '/', '-f', '1'],
                     ['tr', '\\n', ','],
@@ -277,7 +279,7 @@ class HackService:
 
         if ports != None:
             cmd_result = self.utils.run_command_output_loop('nmap scan', [
-                ['sudo', 'nmap', host, '-p', ports, '-oX', f'{path}/inital.xml', '-oN', f'{path}/inital.log'] + options
+                ['sudo', 'nmap', '-p', ports, '-oX', f'{path}/inital.xml', '-oN', f'{path}/inital.log'] + host + options
             ])
 
             cmd_result = self.utils.run_command_output_loop('nmap convert xls', [
