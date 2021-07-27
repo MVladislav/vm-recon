@@ -259,12 +259,16 @@ class HackService:
 
         host = host.split(" ")
 
+        # echo "22,80,631,6379,22,80,22,80,22,80," | sed -e $'s/,/\\\n/g' | sort
+
         if ports == None:
             if udp:
                 ports = self.utils.run_command_output_loop('nmap udp ports', [
                     ['sudo', 'nmap', '-sU', '-p-', f'--min-rate={rate}', '-T4'] + host,
                     ['grep', '^[0-9]'],
                     ['cut', '-d', '/', '-f', '1', ],
+                    ['sort'],
+                    ['uniq'],
                     ['tr', '\\n', ',', ],
                     ['sed', 's/,$//'],
                 ])
@@ -273,6 +277,8 @@ class HackService:
                     ['sudo', 'nmap', '-p-', f'--min-rate={rate}', '-T4'] + host,
                     ['grep', '^[0-9]'],
                     ['cut', '-d', '/', '-f', '1'],
+                    ['sort'],
+                    ['uniq'],
                     ['tr', '\\n', ','],
                     ['sed', 's/,$//'],
                 ])
