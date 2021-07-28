@@ -42,9 +42,9 @@ def nmap(ctx: Context, host, udp, options, options_append, rate):
         if options != None and not options_append:
             options = options.split(',')
         elif options != None and options_append:
-            options = ['-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv'] + options.split(',')
+            options = ['-O', '-T4', '-PE', '-Pn', '--open', '-vv'] + options.split(',')
         else:
-            options = ['-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv']
+            options = ['-O', '-T4', '-PE', '-Pn', '--open', '-vv']
 
         hack.nmap(host=host, udp=udp, options=options, rate=rate)
     except KeyboardInterrupt as k:
