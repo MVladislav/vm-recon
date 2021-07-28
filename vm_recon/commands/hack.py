@@ -88,9 +88,10 @@ def nmap(ctx: Context, host, udp, options, options_append, rate, silent_mode):
         if options != None and not options_append:
             options = options.split(default_split_by)
         elif options != None and options_append:
-            options = ['-sS', '-sV', '-O', f'-T{silent_mode}', '-PE', '-Pn', '-n', '--open', '-sC', '--script=vuln', '-vv'] + options.split(default_split_by)
+            options = ['-sS', '-sV', '-O', f'-T{silent_mode}', '-PE', '-Pn', '-n', '--open', '-sC',
+                       '--script=vuln', '--script=discovery', '-vv'] + options.split(default_split_by)
         else:
-            options = ['-sS', '-sV', '-O', f'-T{silent_mode}', '-PE', '-Pn', '-n', '--open', '-sC', '--script=vuln', '-vv']
+            options = ['-sS', '-sV', '-O', f'-T{silent_mode}', '-PE', '-Pn', '-n', '--open', '-sC', '--script=vuln', '--script=discovery', '-vv']
 
         hack.nmap(host=host, udp=udp, options=options, rate=rate)
     except KeyboardInterrupt as k:
@@ -172,13 +173,31 @@ def kitrunner(ctx: Context, host, wordlist):
 
 
 @cli.command()
-@click.option('-d', '--host', type=str, help='host to scan for', required=True)
+@click.option('-d', '--hosts', type=str, help='host to scan for (multiple split by "space")', required=True)
+@click.option('-p', '--ports', type=str, help='ports to use for scan (multiple split by ",")', required=False, default='139,445')
 @pass_context
-def smb(ctx: Context, host):
+def smb(ctx: Context, hosts, ports):
     '''SMB scan'''
     hack: HackService = ctx.hack
     try:
-        hack.smb(host=host)
+        hack.smb(hosts=hosts, ports=ports)
+    except KeyboardInterrupt as k:
+        hack.utils.logging.debug(f"process interupted! ({k})")
+        sys.exit(5)
+    except Exception as e:
+        hack.utils.logging.exception(e)
+        sys.exit(2)
+
+
+@cli.command()
+@click.option('-d', '--hosts', type=str, help='host to scan for (multiple split by "space")', required=True)
+@click.option('-p', '--ports', type=str, help='ports to use for scan (multiple split by ",")', required=False, default='111')
+@pass_context
+def rpc(ctx: Context, hosts, ports):
+    '''RPC scan'''
+    hack: HackService = ctx.hack
+    try:
+        hack.rpc(hosts=hosts, ports=ports)
     except KeyboardInterrupt as k:
         hack.utils.logging.debug(f"process interupted! ({k})")
         sys.exit(5)

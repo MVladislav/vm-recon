@@ -404,40 +404,69 @@ class HackService:
     #
     # --------------------------------------------------------------------------
 
-    def smb(self, host: str, port: int = 445):
+    def smb(self, hosts: str, ports: str = '139,445'):
         service_name = 'SMB'
         self.utils.log_runBanner(service_name)
-        path = self.utils.create_service_folder(f'scan/smb', host)
-        self.utils.logging.debug(f'new folder created:: {path}')
 
-        # SMBCLIENT ############################################################
-        ########################################################################
-        cmd_result = self.utils.run_command_output_loop('nmap scan', [
-            ['smbclient', '-N', '-L', f'//{host}'],
-            ['tee', f'{path}/smbclient.log']
-        ])
+        for host in hosts.split(' '):
+            for port in ports.split(','):
+                path = self.utils.create_service_folder(f'scan/smb', host)
+                self.utils.logging.debug(f'new folder created:: {path}')
 
-        print('')
-        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        self.utils.logging.notice('use "smbclient //{host}/..." to check the results')
-        self.utils.logging.notice('usefull commands "dir,get,put,..."')
-        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        print('')
+                # SMBCLIENT ############################################################
+                ########################################################################
+                cmd_result = self.utils.run_command_output_loop('smbclient scan', [
+                    ['smbclient', '-N', '-p', str(port).strip(), '-L', f'//{host}'],
+                    ['tee', f'{path}/smbclient.log']
+                ])
+
+                print('')
+                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+                self.utils.logging.notice(f'use "smbclient //{host}/..." to check the results')
+                self.utils.logging.notice('usefull commands "dir,get,put,..."')
+                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+                print('')
+
+        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
         # NMAP #################################################################
         ########################################################################
-        options = ['--script', 'smb-vuln-*,smb-os-discovery']
-        cmd_result = self.utils.run_command_output_loop('nmap scan', [
-            ['sudo', 'nmap', host, '-p', str(port), '-oX', f'{path}/smb_nmap.xml', '-oN', f'{path}/smb_nmap.log'] + options
-        ])
-        cmd_result = self.utils.run_command_output_loop('nmap convert xls', [
-            ['nmap-converter.py', f'{path}/smb_nmap.xml', '-o', f'{path}/smb_nmap.xls']
-        ])
-        cmd_result = self.utils.run_command_output_loop('nmap convert html', [
-            ['xsltproc', f'{path}/smb_nmap.xml', '-o', f'{path}/smb_nmap.html']
-        ])
+        smb_options = ['--script', 'smb-vuln-*,smb-os-discovery,smb-enum-shares.nse,smb-enum-users.nse']
+        n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv'] + smb_options
+        self.nmap(host=hosts, ports=ports, udp=True, options=n_options, path=path)
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+    def rpc(self, hosts: str, ports: str = '111'):
+        service_name = 'RPC'
+        self.utils.log_runBanner(service_name)
+        path = self.utils.create_service_folder(f'scan/rpc', hosts)
+        self.utils.logging.debug(f'new folder created:: {path}')
+
+        # for host in hosts.split(' '):
+        #     for port in ports.split(','):
+        #         path = self.utils.create_service_folder(f'scan/smb', host)
+        #         self.utils.logging.debug(f'new folder created:: {path}')
+
+        #         # SMBCLIENT ############################################################
+        #         ########################################################################
+        #         cmd_result = self.utils.run_command_output_loop('smbclient scan', [
+        #             ['smbclient', '-N', '-p', str(port).strip(), '-L', f'//{host}'],
+        #             ['tee', f'{path}/smbclient.log']
+        #         ])
+
+        #         print('')
+        #         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        #         self.utils.logging.notice(f'use "smbclient //{host}/..." to check the results')
+        #         self.utils.logging.notice('usefull commands "dir,get,put,..."')
+        #         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        #         print('')
+
+        # self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+
+        # NMAP #################################################################
+        ########################################################################
+        rpc_options = ['--script', 'nfs-ls,nfs-statfs,nfs-showmount']
+        n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv'] + rpc_options
+        self.nmap(host=hosts, ports=ports, udp=True, options=n_options, path=path)
 
     # --------------------------------------------------------------------------
     #
