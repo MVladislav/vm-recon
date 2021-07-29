@@ -78,9 +78,10 @@ def tls(ctx: Context, domain):
 @click.option('-o', '--options', type=str, help=f'options to scan with (seperated by "{default_split_by}") [None]', default=None)
 @click.option('-oa', '--options_append', is_flag=True, help='append new options to existing option list')
 @click.option('-r', '--rate', type=int, help='rate to scan ports for [1000]', default=1000)
-@click.option('-s', '--silent-mode', type=int, help='value to use in -T* [4]', default=4)
+@click.option('-sm', '--silent-mode', type=int, help='value to use in -T* [4]', default=4)
+@click.option('-s', '--silent', is_flag=True, help='scan silent with predefined mode')
 @pass_context
-def nmap(ctx: Context, host, udp, options, options_append, rate, silent_mode):
+def nmap(ctx: Context, host, udp, options, options_append, rate, silent_mode, silent):
     '''NMAP scan'''
     hack: HackService = ctx.hack
     try:
@@ -93,7 +94,7 @@ def nmap(ctx: Context, host, udp, options, options_append, rate, silent_mode):
         else:
             options = ['-sS', '-sV', '-O', f'-T{silent_mode}', '-PE', '--open', '-sC', '--script=vuln', '--script=discovery', '-vv']
 
-        hack.nmap(host=host, udp=udp, options=options, rate=rate)
+        hack.nmap(host=host, udp=udp, options=options, rate=rate, silent=silent)
     except KeyboardInterrupt as k:
         hack.utils.logging.debug(f"process interupted! ({k})")
         sys.exit(5)
@@ -105,7 +106,7 @@ def nmap(ctx: Context, host, udp, options, options_append, rate, silent_mode):
 @cli.command()
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
 @click.option('-m', '--mode', type=click.Choice(['dir', 'vhost', 'fuzz', 'dns', 'bak']), help='type to scan for [dir]', default='dir')
-@click.option('-t', '--threads', type=int, help='thrads to use [10]', default=10)
+@click.option('-t', '--threads', type=int, help='threads to use [10]', default=10)
 @click.option('-w', '--wordlist', type=str, help='wordlist to use')
 @click.option('-o', '--options', type=str, help=f'options to scan with (seperated by "{default_split_by}") ["-k", "-r", "--random-agent"]', default=None)
 @click.option('-oa', '--options_append', is_flag=True, help='append new options to existing option list')

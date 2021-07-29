@@ -251,7 +251,7 @@ class HackService:
     # --------------------------------------------------------------------------
 
     def nmap(self, host: str, udp: bool = True, ports=None,
-             options: list = [], rate: int = 1000, path: str = None) -> None:
+             options: list = [], rate: int = 1000, path: str = None, silent: bool = False) -> None:
         service_name = 'NMAP'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/namp', host) if path == None else path
@@ -259,12 +259,18 @@ class HackService:
 
         host = host.split(" ")
 
-        # echo "22,80,631,6379,22,80,22,80,22,80," | sed -e $'s/,/\\\n/g' | sort
+        t_scan = 4
+        if silent:
+            rate = 100
+            t_scan = 1
+            for option in options:
+                if "-T" in option:
+                    option = f'-T{t_scan}'
 
         if ports == None:
             if udp:
                 ports = self.utils.run_command_output_loop('nmap udp ports', [
-                    ['sudo', 'nmap', '-sU', '-p-', f'--min-rate={rate}', '-T4'] + host,
+                    ['sudo', 'nmap', '-sU', '-sT', '--max-retries=1', '-p-', f'--min-rate={rate}', f'-T{t_scan}'] + host,
                     ['grep', '^[0-9]'],
                     ['cut', '-d', '/', '-f', '1', ],
                     ['sort'],
@@ -274,7 +280,7 @@ class HackService:
                 ])
             else:
                 ports = self.utils.run_command_output_loop('nmap tcp ports', [
-                    ['sudo', 'nmap', '-p-', f'--min-rate={rate}', '-T4'] + host,
+                    ['sudo', 'nmap', '-p-', f'--min-rate={rate}', f'-T{t_scan}'] + host,
                     ['grep', '^[0-9]'],
                     ['cut', '-d', '/', '-f', '1'],
                     ['sort'],
@@ -322,7 +328,7 @@ class HackService:
 
         if ports != None:
             self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
-            n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv']
+            n_options = ['-sV', '-O', f'-T{t_scan}', '-PE', '-Pn', '-n', '--open', '-vv']
             self.nmap(host=host, ports=ports, options=n_options, path=path)
         else:
             self.utils.logging.warning('[-] No ports found')
@@ -424,6 +430,7 @@ class HackService:
                 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
                 self.utils.logging.notice(f'use "smbclient //{host}/..." to check the results')
                 self.utils.logging.notice('usefull commands "dir,get,put,..."')
+                self.utils.logging.notice(f'usefull commands "smbget -R smb://{host}/..."')
                 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
                 print('')
 
@@ -431,9 +438,10 @@ class HackService:
 
         # NMAP #################################################################
         ########################################################################
+        path = self.utils.create_service_folder(f'scan/smb', hosts)
         smb_options = ['--script', 'smb-vuln-*,smb-os-discovery,smb-enum-shares.nse,smb-enum-users.nse']
         n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv'] + smb_options
-        self.nmap(host=hosts, ports=ports, udp=True, options=n_options, path=path)
+        self.nmap(host=hosts, ports=ports, udp=True, options=n_options, path=path, silent=False)
 
     def rpc(self, hosts: str, ports: str = '111'):
         service_name = 'RPC'
@@ -466,7 +474,7 @@ class HackService:
         ########################################################################
         rpc_options = ['--script', 'nfs-ls,nfs-statfs,nfs-showmount']
         n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv'] + rpc_options
-        self.nmap(host=hosts, ports=ports, udp=True, options=n_options, path=path)
+        self.nmap(host=hosts, ports=ports, udp=True, options=n_options, path=path, silent=False)
 
     # --------------------------------------------------------------------------
     #
