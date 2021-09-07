@@ -42,9 +42,9 @@ def nmap(ctx: Context, host, udp, options, options_append, rate):
         if options != None and not options_append:
             options = options.split(',')
         elif options != None and options_append:
-            options = ['-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv'] + options.split(',')
+            options = ['-O', '-T4', '-PE', '--open', '-vv'] + options.split(',')
         else:
-            options = ['-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv']
+            options = ['-O', '-T4', '-PE', '--open', '-vv']
 
         hack.nmap(host=host, udp=udp, options=options, rate=rate)
     except KeyboardInterrupt as k:
@@ -57,13 +57,22 @@ def nmap(ctx: Context, host, udp, options, options_append, rate):
 
 @cli.command()
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
+@click.option('-o', '--options', type=str, help='options to scan with (comma seperated)', default=None)
+@click.option('-oa', '--options_append', is_flag=True, help='append new options to existing option list')
 @click.option('-r', '--rate', type=int, help='rate to use', default=10000)
 @click.pass_context
-def masscan(ctx: Context, host, rate):
+def masscan(ctx: Context, host, options, options_append, rate):
     '''MASSCAN scan'''
     hack: HackService = ctx.obj.hack
     try:
-        hack.masscan(host=host, rate=rate)
+        if options != None and not options_append:
+            options = options.split(',')
+        elif options != None and options_append:
+            options = ['-p1-65535', '--rate', str(rate), '--wait', '0', '--open', '-vv'] + options.split(',')
+        else:
+            options = ['-p1-65535', '--rate', str(rate), '--wait', '0', '--open', '-vv']
+
+        hack.masscan(host=host, rate=rate, options=options)
     except KeyboardInterrupt as k:
         hack.utils.logging.debug(f"process interupted! ({k})")
         sys.exit(5)
