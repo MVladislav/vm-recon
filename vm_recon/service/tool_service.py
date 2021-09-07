@@ -54,6 +54,11 @@ class ToolService:
     #
     # --------------------------------------------------------------------------
 
+    # TODO: add usfull command, to not need to remember all :D
+    def info_list():
+        pass
+        # find / -perm -u=s -type f 2>/dev/null
+
     def nc(self, port: int = 9001):
         service_name = 'NC'
         self.utils.log_runBanner(service_name)
