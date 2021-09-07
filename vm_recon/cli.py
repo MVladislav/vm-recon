@@ -2,8 +2,29 @@ import os
 
 import click
 
-import vm_recon.config as config
-from vm_recon.utilities.utils import Utils
+from .config import BASE_PATH, PROJECT, PROJECT_NAME, VERBOSE, VERSION
+from .utilities.utils import Utils
+
+# ------------------------------------------------------------------------------
+#
+#
+#
+# ------------------------------------------------------------------------------
+
+# Program Header
+# Basic user interface header
+print(r'''    __  ____    ____          ___      __
+   /  |/  / |  / / /___ _____/ (_)____/ /___ __   __
+  / /|_/ /| | / / / __ `/ __  / / ___/ / __ `/ | / /
+ / /  / / | |/ / / /_/ / /_/ / (__  ) / /_/ /| |/ /
+/_/  /_/  |___/_/\__,_/\__,_/_/____/_/\__,_/ |___/''')
+print('**************** 4D 56 6C 61 64 69 73 6C 61 76 *****************')
+print('****************************************************************')
+print('* Copyright of MVladislav, 2021                                *')
+print('* https://mvladislav.online                                    *')
+print('* https://github.com/MVladislav                                *')
+print('****************************************************************')
+print()
 
 # ------------------------------------------------------------------------------
 #
@@ -15,11 +36,11 @@ from vm_recon.utilities.utils import Utils
 class Context:
 
     def __init__(self):
-        self.verbose = config.VERBOSE
-        self.project = config.PROJECT_NAME
-        self.base_path = config.BASE_PATH
+        self.verbose = VERBOSE
+        self.project = PROJECT_NAME
+        self.base_path = BASE_PATH
 
-        self.utils = None
+        self.utils: Utils = None
 
 # ------------------------------------------------------------------------------
 #
@@ -39,7 +60,7 @@ class ComplexCLI(click.MultiCommand):
 
     def get_command(self, ctx, name):
         try:
-            mod = __import__(f"{config.PROJECT}.commands.{name}", None, None, ["cli"])
+            mod = __import__(f"{PROJECT}.commands.{name}", None, None, ["cli"])
             return mod.cli
         except ImportError as e:
             pass
@@ -58,12 +79,15 @@ pass_context = click.make_pass_decorator(Context, ensure=True)
 
 
 @click.command(cls=ComplexCLI, context_settings=CONTEXT_SETTINGS)
-@click.version_option(config.VERSION)
-@click.option('-v', '--verbose', help='Enables verbose mode', default=None, count=True)
-@click.option('--home', help='home path to save scannes', default=None, type=click.Path(writable=True))
-@click.option('-p', '--project', help='project name to store result in', default=None, type=str)
+@click.version_option(VERSION)
+@click.option('-v', '--verbose', count=True, help='Enables verbose mode', default=None)
+@click.option('--home', type=click.Path(writable=True), help='home path to save scannes', default=None)
+@click.option('-p', '--project', type=str, help='project name to store result in', default=None)
+@click.option('-dsp', '--disable-split-project', is_flag=True, help='disable splitting folder struct by project')
+@click.option('-dsh', '--disable-split-host', is_flag=True, help='disable splitting folder struct by host')
+@click.option('-pom', '--print-only-mode', is_flag=True, help='command wil only printed and not run')
 @pass_context
-def cli(ctx, verbose, home, project):
+def cli(ctx: Context, verbose, home, project, disable_split_project, disable_split_host, print_only_mode):
     """Welcome to vm-hack"""
     if verbose != None:
         ctx.verbose = verbose
@@ -71,4 +95,7 @@ def cli(ctx, verbose, home, project):
         ctx.project = project
     if home != None:
         ctx.base_path = home
+    ctx.disable_split_project = disable_split_project
+    ctx.disable_split_host = disable_split_host
+    ctx.print_only_mode = print_only_mode
     ctx.utils = Utils(ctx)

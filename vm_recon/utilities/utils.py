@@ -1,5 +1,7 @@
 import logging as logger
+import os
 import re
+import socket
 import subprocess
 import sys
 import time
@@ -48,6 +50,21 @@ class Utils:
         self.logging.addHandler(logger.StreamHandler(sys.stdout))
         coloredlogs.install(level=log_level, fmt=log_format, logger=self.logging)
 
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        self.logging.debug(f'LOGGING-LEVEL          : {self.ctx.verbose}')
+        self.logging.debug(f'DISABLED SPLIT PROJECT : {self.ctx.disable_split_project}')
+        self.logging.debug(f'DISABLED SPLIT HOST    : {self.ctx.disable_split_host}')
+        self.logging.debug(f'PRINT ONLY MODE        : {self.ctx.print_only_mode}')
+        self.logging.debug(f'PROJECT-PATH           : {self.create_service_path("host_example")}/')
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        print()
+
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
+
     def log_runBanner(self, msg: str) -> None:
         self.logging.info(f"[+] Running {msg}...")
 
@@ -63,10 +80,23 @@ class Utils:
     def get_user_path(self) -> str:
         return str(Path.home())
 
-    def create_service_folder(self, name: str) -> str:
-        path = f'{self.ctx.base_path}{"" if self.ctx.project == None else f"/{self.ctx.project}"}/{name}'
+    def create_service_folder(self, name: str, host: str = None) -> str:
+        path = f'{self.create_service_path(host)}/{name}'
         self.create_folder(path)
         return path
+
+    def create_service_path(self, host: str = None):
+        if not self.ctx.disable_split_host:
+            host = self.slugify(host)
+            host = "" if host == None else f"/{host}"
+        else:
+            host = ""
+        if not self.ctx.disable_split_project:
+            project = "" if self.ctx.project == None else f"/{self.ctx.project}"
+        else:
+            project = ""
+
+        return f'{self.ctx.base_path}{project}{host}'
 
     # --------------------------------------------------------------------------
     #
@@ -108,31 +138,33 @@ class Utils:
     def run_command(self, command_list=[], input: str = None, inner_loop: bool = False) -> str:
         sub_p = None
         result = None
-        try:
-            index_to_check = 0
-            index_to_check = 1 if command_list[index_to_check] == "sudo" else index_to_check
 
-            if self.is_tool(command_list[index_to_check]):
-                if input == None:
-                    sub_p: subprocess.CompletedProcess = subprocess.run(command_list, stdout=subprocess.PIPE)  # , shell=True
-                    result = sub_p.stdout
+        if not self.ctx.print_only_mode:
+            try:
+                index_to_check = 0
+                index_to_check = 1 if command_list[index_to_check] == "sudo" else index_to_check
+
+                if self.is_tool(command_list[index_to_check]):
+                    if input == None:
+                        sub_p: subprocess.CompletedProcess = subprocess.run(command_list, stdout=subprocess.PIPE)  # , shell=True
+                        result = sub_p.stdout
+                    else:
+                        sub_p: subprocess.Popen = subprocess.Popen(command_list, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+                        sub_p = sub_p.communicate(input.encode())[0]
+                        result = sub_p
                 else:
-                    sub_p: subprocess.Popen = subprocess.Popen(command_list, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-                    sub_p = sub_p.communicate(input.encode())[0]
-                    result = sub_p
-            else:
-                self.logging.error(f"the command '{command_list[index_to_check]}', did not exist")
-        # termination with Ctrl+C
-        except KeyboardInterrupt as k:
-            if sub_p != None and type(sub_p) == subprocess.Popen:
-                sub_p.kill()
-            self.logging.debug(f"process interupted! ({k})")
-            if inner_loop:
-                raise KeyboardInterrupt
-        except Exception as e:
-            self.logging.exception(e)
-        if result != None:
-            return result.decode()
+                    self.logging.error(f"the command '{command_list[index_to_check]}', did not exist")
+            # termination with Ctrl+C
+            except KeyboardInterrupt as k:
+                if sub_p != None and type(sub_p) == subprocess.Popen:
+                    sub_p.kill()
+                self.logging.debug(f"process interupted! ({k})")
+                if inner_loop:
+                    raise KeyboardInterrupt
+            except Exception as e:
+                self.logging.exception(e)
+            if result != None:
+                return result.decode()
 
     def is_tool(self, name: str) -> bool:
         """Check whether `name` is on PATH and marked as executable."""
@@ -143,13 +175,13 @@ class Utils:
         cmd_result = None
         try:
             for cmd in cmds:
-                self.logging.debug(" ".join(cmd))
+                self.logging.notice(" ".join(cmd))
                 if output:
                     cmd_result = self.run_command(command_list=cmd, input=cmd_result, inner_loop=True)
                 else:
                     cmd_result = self.run_command(command_list=cmd, inner_loop=True)
                 if cmd_result != None and len(cmd_result) > 0:
-                    self.logging.notice(cmd_result)
+                    self.logging.debug(cmd_result)
             return cmd_result
         except KeyboardInterrupt as k:
             self.logging.debug(f"process interupted! ({k})")
@@ -172,3 +204,26 @@ class Utils:
             value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
         value = re.sub(r'[^\w\s-]', '', value.lower())
         return re.sub(r'[-\s]+', '-', value).strip('-_')
+
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
+
+    def in_sudo_mode(self):
+        """If the user doesn't run the program with super user privileges, don't allow them to continue."""
+        if not 'SUDO_UID' in os.environ.keys():
+            self.logging.error("Try running this program with sudo.")
+            sys.exit(1)
+
+    def get_ip_address(self):
+        st = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            st.connect(('10.255.255.255', 1))
+            IP = st.getsockname()[0]
+        except Exception:
+            IP = '127.0.0.1'
+        finally:
+            st.close()
+        return IP
