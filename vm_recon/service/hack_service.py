@@ -446,6 +446,19 @@ class HackService:
                 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
                 print('')
 
+                # ENUM4LINUX ############################################################
+                ########################################################################
+                cmd_result = self.utils.run_command_output_loop('enum4linux scan', [
+                    ['enum4linux', host],
+                    ['tee', f'{path}/enum4linux.log']
+                ])
+
+                print('')
+                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+                self.utils.logging.notice(f'use "smbmap -u \'...\' -p \'\' -R -H {host}" to check the results')
+                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+                print('')
+
         self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
 
         # NMAP #################################################################
