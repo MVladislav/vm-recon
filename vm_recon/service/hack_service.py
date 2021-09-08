@@ -110,7 +110,8 @@ class HackService:
 
         if mode == "gospider":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['gospider', '-s', domain, '-o', f'{path}/gospider', '-c', str(threads), '-d', str(depth), '--other-source', '--include-subs'],
+                ['gospider', '-s', domain, '-o', f'{path}/gospider', '-c',
+                    str(threads), '-d', str(depth), '--other-source', '--include-subs'],
                 ['tee', f'{path}/gospider.log']
             ])
         elif mode == "hakrawler":
@@ -153,7 +154,8 @@ class HackService:
             ])
         elif mode == "active":
             cmd_result = self.utils.run_command_output_loop(f'recon {mode}', [
-                ['amass', 'enum', '-active', '-src', '-ip', '-brute', '-min-for-recursive', str(depth), '-d', domain, '-r', ns, '-o', f'{path}/amass_active'],
+                ['amass', 'enum', '-active', '-src', '-ip', '-brute', '-min-for-recursive',
+                    str(depth), '-d', domain, '-r', ns, '-o', f'{path}/amass_active'],
                 ['tee', f'{path}/amass_active.log']
             ])
         elif mode == "gau":
@@ -172,34 +174,37 @@ class HackService:
     #
     # --------------------------------------------------------------------------
 
-    def dns(self, host: str, ns: str = "ANY") -> None:
+    def dns(self, host: str, ns: str = "", record_type: str = "ANY", port: int = 53) -> None:
         service_name = 'DNS/DIG'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/dig', host)
         self.utils.logging.debug(f'new folder created:: {path}')
 
+        if ns and len(ns) > 0 and not ns.startswith("@"):
+            ns = f"@{ns}"
+
         cmd_result = self.utils.run_command_output_loop('dig', [
-            ['dig', host, ns],
+            ['dig', "-p", str(port), ns, host, record_type],
             ['tee', f'{path}/dig_dns.log'],
         ])
         cmd_result = self.utils.run_command_output_loop('dig x', [
-            ['dig', '-x', host, ns],
+            ['dig', '-x', '-p', str(port), ns, host, record_type],
             ['tee', f'{path}/dig_dns_x.log'],
         ])
         cmd_result = self.utils.run_command_output_loop('dig spf', [
-            ['dig', 'TXT', host, ns],
+            ['dig', 'TXT', '-p', str(port), ns, host, record_type],
             ['tee', f'{path}/dig_dns_txt_spf.log'],
         ])
         cmd_result = self.utils.run_command_output_loop('dig dkmi', [
-            ['dig', 'TXT', f'dkmi._{host}', ns],
+            ['dig', 'TXT', '-p', str(port), ns, f'dkmi._{host}', record_type],
             ['tee', f'{path}/dig_dns_txt_dkmi.log'],
         ])
         cmd_result = self.utils.run_command_output_loop('dig dmarc', [
-            ['dig', 'TXT', f'_dmarc.{host}', ns],
+            ['dig', 'TXT', '-p', str(port), ns, f'_dmarc.{host}', record_type],
             ['tee', f'{path}/dig_dns_txt_dmarc.log'],
         ])
         cmd_result = self.utils.run_command_output_loop('dig axfr', [
-            ['dig', '+multi', 'AXFR', ns, host],
+            ['dig', '+multi', 'AXFR', '-p', str(port), ns, host, record_type],
             ['tee', f'{path}/dig_dns_axfr_multi.log '],
         ])
 
@@ -315,7 +320,8 @@ class HackService:
             ['sudo', 'masscan', host, '-oX', f'{path}/masscan.xml'] + options
         ])
         cmd_result = self.utils.run_command_output_loop('xsltproc', [
-            ['xsltproc', '-o', f'{path}/final-masscan.html', '/opt/git/nmap-bootstrap-xsl/nmap-bootstrap.xsl', f'{path}/masscan.xml']
+            ['xsltproc', '-o', f'{path}/final-masscan.html',
+                '/opt/git/nmap-bootstrap-xsl/nmap-bootstrap.xsl', f'{path}/masscan.xml']
         ])
         ports = self.utils.run_command_output_loop('cat ports', [
             ['cat', f'{path}/masscan.xml'],
@@ -349,13 +355,15 @@ class HackService:
         if type == 'dir' or type == None:
             wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster dir', [
-                ['gobuster', 'dir', '-u', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_dir'] + options,
+                ['gobuster', 'dir', '-u', host, '-w', wordlist, '-r', '-t',
+                    str(threads), '-o', f'{path}/gobuster_dir'] + options,
                 ['tee', f'{path}/gobuster_dir.log']
             ])
         elif type == 'vhost':
             wordlist = '/opt/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster vhost', [
-                ['gobuster', 'vhost', '-u', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_vhost'] + options,
+                ['gobuster', 'vhost', '-u', host, '-w', wordlist, '-r', '-t',
+                    str(threads), '-o', f'{path}/gobuster_vhost'] + options,
                 ['tee', f'{path}/gobuster_vhost.log']
             ])
         elif type == 'fuzz':
@@ -367,19 +375,22 @@ class HackService:
             # wordlist = '/opt/git/SecLists/Discovery/Web-Content/CMS/wp-plugins.fuzz.txt' if w_list == None else w_list
             # wordlist = '/opt/git/SecLists/Discovery/Web-Content/CMS/wp-themes.fuzz.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster fuzz', [
-                ['gobuster', 'fuzz', '-u', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_fuzz'] + options,
+                ['gobuster', 'fuzz', '-u', host, '-w', wordlist, '-r', '-t',
+                    str(threads), '-o', f'{path}/gobuster_fuzz'] + options,
                 ['tee', f'{path}/gobuster_fuzz.log']
             ])
         elif type == 'dns':
             wordlist = '/opt/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster dns', [
-                ['gobuster', 'dns', '-d', host, '-w', wordlist, '-r', '-t', str(threads), '-o', f'{path}/gobuster_dns'] + options,
+                ['gobuster', 'dns', '-d', host, '-w', wordlist, '-r', '-t',
+                    str(threads), '-o', f'{path}/gobuster_dns'] + options,
                 ['tee', f'{path}/gobuster_dns.log']
             ])
         elif type == 'bak':
             wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
             cmd_result = self.utils.run_command_output_loop('gobuster bak', [
-                ['gobuster', 'dir', '-u', host, '-w', wordlist, '-d', '-r', '-t', str(threads), '-o', f'{path}/gobuster_back'] + options,
+                ['gobuster', 'dir', '-u', host, '-w', wordlist, '-d', '-r',
+                    '-t', str(threads), '-o', f'{path}/gobuster_back'] + options,
                 ['tee', f'{path}/gobuster_back.log']
             ])
         else:
@@ -398,7 +409,8 @@ class HackService:
         ignore_length = 34
 
         cmd_result = self.utils.run_command_output_loop('kitrunner', [
-            ['kr', 'scan', host, '-w', wordlist, '-A=apiroutes-210228:20000', '-x', str(max_connection_per_host), f'--ignore-length={ignore_length}'],
+            ['kr', 'scan', host, '-w', wordlist, '-A=apiroutes-210228:20000', '-x',
+                str(max_connection_per_host), f'--ignore-length={ignore_length}'],
             ['tee', f'{path}/kr_scan.log']
         ])
 
@@ -489,7 +501,8 @@ class HackService:
         self.utils.logging.debug(f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop('whatweb silent', [
-            ['whatweb', host, '-a', str(silent), '-v', f'--log-verbose={path}/whatweb_v.log', f'--log-json={path}/whatweb_j.log']
+            ['whatweb', host, '-a', str(silent), '-v',
+             f'--log-verbose={path}/whatweb_v.log', f'--log-json={path}/whatweb_j.log']
         ])
 
         self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')

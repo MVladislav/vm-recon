@@ -32,16 +32,15 @@ def cli(ctx: Context):
 
 @cli.command()
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
-@click.option('-ns', '--ns', type=str, help='define nameserver')
+@click.option('-n', '--nameserver', type=str, help='define nameserver [""]', default="")
+@click.option('-t', '--record_type', type=str, help='define record type [ANY]', default="ANY")
+@click.option('-p', '--port', type=int, help='define port [53]', default=53)
 @pass_context
-def dns(ctx: Context, host, ns):
+def dns(ctx: Context, host, nameserver, record_type, port):
     '''DNS scan'''
     hack: HackService = ctx.hack
     try:
-        if ns != None:
-            hack.dns(host=host, ns=ns)
-        else:
-            hack.dns(host=host)
+        hack.dns(host=host, ns=nameserver, record_type=record_type, port=port)
     except KeyboardInterrupt as k:
         hack.utils.logging.debug(f"process interupted! ({k})")
         sys.exit(5)
@@ -92,7 +91,8 @@ def nmap(ctx: Context, host, udp, options, options_append, rate, silent_mode, si
             options = ['-sS', '-sV', '-O', f'-T{silent_mode}', '-PE', '--open', '-sC',
                        '--script=vuln', '--script=discovery', '-vv'] + options.split(default_split_by)
         else:
-            options = ['-sS', '-sV', '-O', f'-T{silent_mode}', '-PE', '--open', '-sC', '--script=vuln', '--script=discovery', '-vv']
+            options = ['-sS', '-sV', '-O', f'-T{silent_mode}', '-PE',
+                       '--open', '-sC', '--script=vuln', '--script=discovery', '-vv']
 
         hack.nmap(host=host, udp=udp, options=options, rate=rate, silent=silent)
     except KeyboardInterrupt as k:
