@@ -1,8 +1,9 @@
+import logging
 import sys
 
 import click
 
-from ..cli import Context, pass_context
+from ..main import Context, pass_context
 from ..service.hack_service import HackService
 
 # ------------------------------------------------------------------------------
@@ -48,10 +49,10 @@ def nmap(ctx: Context, host, udp, options, options_append, rate):
 
         hack.nmap(host=host, udp=udp, options=options, rate=rate)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 
@@ -74,8 +75,8 @@ def masscan(ctx: Context, host, options, options_append, rate):
 
         hack.masscan(host=host, rate=rate, options=options)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)

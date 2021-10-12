@@ -1,8 +1,9 @@
+import logging
 import sys
 
 import click
 
-from ..cli import Context, pass_context
+from ..main import Context, pass_context
 from ..service.wifi_service import WiFiService
 
 # ------------------------------------------------------------------------------
@@ -35,11 +36,11 @@ def test(ctx: Context):
     hack: WiFiService = ctx.obj.hack
     try:
         pass
-        hack.utils.logging.debug(hack.find_nic())
+        logging.log(logging.DEBUG, hack.find_nic())
         # hack.<...>
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)

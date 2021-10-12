@@ -2,10 +2,11 @@
     <https://github.com/davidbombal/red-python-scripts/blob/main/wifi_dos_own.py>
 '''
 
+import logging
 import re
 
-from ..cli import Context
-from ..utilities.utils import Utils
+from ..main import Context
+from ..utils.utils import Utils
 
 # ------------------------------------------------------------------------------
 #
@@ -29,7 +30,7 @@ class WiFiService:
     def __init__(self, ctx: Context):
         self.ctx: Context = ctx
         self.utils: Utils = self.ctx.utils
-        self.utils.logging.debug('wifi-service is initiated')
+        logging.log(logging.DEBUG, 'wifi-service is initiated')
 
     # --------------------------------------------------------------------------
     #

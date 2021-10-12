@@ -1,4 +1,4 @@
-import logging as logger
+import logging
 import os
 import re
 import socket
@@ -8,9 +8,6 @@ import time
 import unicodedata
 from pathlib import Path
 from shutil import which
-
-import coloredlogs
-import verboselogs
 
 # ------------------------------------------------------------------------------
 #
@@ -30,32 +27,12 @@ class Utils:
     def __init__(self, ctx):
         self.ctx = ctx
 
-        if self.ctx.verbose == 0:
-            log_level = logger.INFO
-            log_format = '%(message)s'
-        elif self.ctx.verbose == 1:
-            log_level = logger.INFO
-            log_format = '%(levelname)-7s - %(message)s'
-        elif self.ctx.verbose == 2:
-            log_level = logger.DEBUG
-            log_format = '%(levelname)-7s - %(message)s'
-        elif self.ctx.verbose == 3:
-            log_level = logger.DEBUG
-            log_format = '[%(lineno)-6d: (%(funcName)-30s)]:: %(levelname)-7s - %(message)s'
-        elif self.ctx.verbose > 3:
-            log_level = logger.DEBUG
-            log_format = '[%(asctime)s,%(msecs)03d] %(name)s[%(process)d] {%(lineno)-6d: (%(funcName)-30s)} %(levelname)-7s - %(message)s'
-
-        self.logging = verboselogs.VerboseLogger('vm_logger')
-        self.logging.addHandler(logger.StreamHandler(sys.stdout))
-        coloredlogs.install(level=log_level, fmt=log_format, logger=self.logging)
-
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        self.logging.debug(f'LOGGING-LEVEL          : {self.ctx.verbose}')
-        self.logging.debug(f'DISABLED SPLIT PROJECT : {self.ctx.disable_split_project}')
-        self.logging.debug(f'DISABLED SPLIT HOST    : {self.ctx.disable_split_host}')
-        self.logging.debug(f'PRINT ONLY MODE        : {self.ctx.print_only_mode}')
-        self.logging.debug(f'PROJECT-PATH           : {self.create_service_path("host_example")}/')
+        logging.log(logging.DEBUG, f'LOGGING-VERBOSITY      : {self.ctx.logging_verbose}')
+        logging.log(logging.DEBUG, f'DISABLED SPLIT PROJECT : {self.ctx.disable_split_project}')
+        logging.log(logging.DEBUG, f'DISABLED SPLIT HOST    : {self.ctx.disable_split_host}')
+        logging.log(logging.DEBUG, f'PRINT ONLY MODE        : {self.ctx.print_only_mode}')
+        logging.log(logging.DEBUG, f'PROJECT-PATH           : {self.create_service_path("host_example")}/')
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         print()
 
@@ -66,7 +43,7 @@ class Utils:
     # --------------------------------------------------------------------------
 
     def log_runBanner(self, msg: str) -> None:
-        self.logging.info(f"[+] Running {msg}...")
+        logging.log(logging.INFO, f"[+] Running {msg}...")
 
     # --------------------------------------------------------------------------
     #
@@ -96,6 +73,9 @@ class Utils:
         else:
             project = ""
 
+        if self.ctx.base_path[-1] == "/":
+            self.ctx.base_path = self.ctx.base_path[0:-1]
+
         return f'{self.ctx.base_path}{project}{host}'
 
     # --------------------------------------------------------------------------
@@ -116,12 +96,12 @@ class Utils:
                 while is_running:
                     time.sleep(600)
             else:
-                self.logging.error(f"the command '{command_list[index_to_check]}', did not exist")
+                logging.log(logging.ERROR, f"the command '{command_list[index_to_check]}', did not exist")
         # termination with Ctrl+C
         except KeyboardInterrupt:
             print("process killed!")
         except Exception as e:
-            self.logging.exception(e)
+            logging.log(logging.CRITICAL, e)
         is_running = False
         try:
             if sub_p != None:
@@ -153,16 +133,16 @@ class Utils:
                         sub_p = sub_p.communicate(input.encode())[0]
                         result = sub_p
                 else:
-                    self.logging.error(f"the command '{command_list[index_to_check]}', did not exist")
+                    logging.log(logging.ERROR, f"the command '{command_list[index_to_check]}', did not exist")
             # termination with Ctrl+C
             except KeyboardInterrupt as k:
                 if sub_p != None and type(sub_p) == subprocess.Popen:
                     sub_p.kill()
-                self.logging.debug(f"process interupted! ({k})")
+                logging.log(logging.DEBUG, f"process interupted! ({k})")
                 if inner_loop:
                     raise KeyboardInterrupt
             except Exception as e:
-                self.logging.exception(e)
+                logging.log(logging.CRITICAL, e)
             if result != None:
                 return result.decode()
 
@@ -175,16 +155,18 @@ class Utils:
         cmd_result = None
         try:
             for cmd in cmds:
-                self.logging.notice(" ".join(cmd))
+                logging.log(logging.NOTICE, " ".join(cmd))
                 if output:
                     cmd_result = self.run_command(command_list=cmd, input=cmd_result, inner_loop=True)
                 else:
                     cmd_result = self.run_command(command_list=cmd, inner_loop=True)
                 if cmd_result != None and len(cmd_result) > 0:
-                    self.logging.debug(cmd_result)
+                    logging.log(logging.DEBUG, cmd_result)
             return cmd_result
         except KeyboardInterrupt as k:
-            self.logging.debug(f"process interupted! ({k})")
+            logging.log(logging.DEBUG, f"process interupted! ({k})")
+        except Exception as e:
+            logging.log(logging.CRITICAL, e)
         return cmd_result
 
     # --------------------------------------------------------------------------
@@ -192,6 +174,18 @@ class Utils:
     #
     #
     # --------------------------------------------------------------------------
+
+    def group(self, flat, size):
+        '''
+        group list a flat list into a matrix of "size"
+        '''
+        return [flat[i:i+size] for i in range(0, len(flat), size)]
+
+    def normalize_caseless(self, text):
+        '''
+        lowercase a string, for any unicode
+        '''
+        return unicodedata.normalize("NFKD", text.casefold())
 
     def slugify(self, value, allow_unicode=False):
         """
@@ -214,7 +208,7 @@ class Utils:
     def in_sudo_mode(self):
         """If the user doesn't run the program with super user privileges, don't allow them to continue."""
         if not 'SUDO_UID' in os.environ.keys():
-            self.logging.error("Try running this program with sudo.")
+            logging.log(logging.ERROR, "Try running this program with sudo.")
             sys.exit(1)
 
     def get_ip_address(self):
@@ -227,3 +221,25 @@ class Utils:
         finally:
             st.close()
         return IP
+
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
+
+    def define_option_list(self, options, default_options=[], options_append=False, default_split_by=";"):
+        try:
+            # add options from params
+            if options != None and not options_append:
+                options = options.split(default_split_by)
+            # add options from params to existing options
+            elif options != None and options_append:
+                options = default_options + options.split(default_split_by)
+            # use existing options
+            else:
+                options = default_options
+            return options
+        except Exception as e:
+            logging.log(logging.CRITICAL, e)
+        return []

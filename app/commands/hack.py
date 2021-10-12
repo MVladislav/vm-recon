@@ -1,8 +1,9 @@
+import logging
 import sys
 
 import click
 
-from ..cli import Context, pass_context
+from ..main import Context, pass_context
 from ..service.hack_service import HackService
 
 default_split_by = ';'
@@ -42,10 +43,10 @@ def dns(ctx: Context, host, nameserver, record_type, port):
     try:
         hack.dns(host=host, ns=nameserver, record_type=record_type, port=port)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 
@@ -58,10 +59,10 @@ def tls(ctx: Context, domain):
     try:
         hack.tls(domain=domain)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -96,10 +97,10 @@ def nmap(ctx: Context, host, udp, options, options_append, rate, silent_mode, si
 
         hack.nmap(host=host, udp=udp, options=options, rate=rate, silent=silent)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 
@@ -143,10 +144,10 @@ def gobuster(ctx: Context, host, mode, threads, wordlist, options, options_appen
 
         hack.gobuster(host=host, type=mode, threads=threads, w_list=wordlist, options=options)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 
@@ -160,10 +161,10 @@ def kitrunner(ctx: Context, host, wordlist):
     try:
         hack.kitrunner(host=host, w_list=wordlist)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -183,10 +184,10 @@ def smb(ctx: Context, hosts, ports):
     try:
         hack.smb(hosts=hosts, ports=ports)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 
@@ -200,10 +201,10 @@ def rpc(ctx: Context, hosts, ports):
     try:
         hack.rpc(hosts=hosts, ports=ports)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -223,10 +224,10 @@ def whatweb(ctx: Context, host, silent):
     try:
         hack.whatweb(host=host, silent=silent)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 
@@ -240,10 +241,10 @@ def wpscan(ctx: Context, host, silent):
     try:
         hack.wpscan(host=host, silent=silent)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -273,10 +274,10 @@ def recon(ctx: Context, domain, org, mode, threads, depth, nameserver):
     try:
         hack.recon(domain=domain, org=org, mode=mode, threads=threads, depth=depth, ns=nameserver)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -295,8 +296,8 @@ def pwd(ctx: Context, file):
     try:
         hack.pwd(file=file)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)

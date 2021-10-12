@@ -1,9 +1,10 @@
+import logging
 import sys
 
 import click
 
-from ..cli import Context, pass_context
-from ..service.tool_service import ToolService
+from ..main import Context, pass_context
+from ..service.tool_service import DownloadWhat, ToolService
 
 # ------------------------------------------------------------------------------
 #
@@ -28,7 +29,7 @@ def cli(ctx: Context):
 
 
 @cli.command()
-@click.option('-w', '--what', type=click.Choice(['linpeas', 'winPEAS']), help='download a tool', required=True)
+@click.option('-w', '--what', type=click.Choice(list(map(str, DownloadWhat))), help='download a tool', required=True)
 @click.pass_context
 def wget(ctx: Context, what):
     '''DOWNLOAD'''
@@ -36,10 +37,10 @@ def wget(ctx: Context, what):
     try:
         hack.download(what=what)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -61,10 +62,10 @@ def nc(ctx: Context, port):
         else:
             hack.nc()
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 
@@ -85,10 +86,10 @@ def pwncat(ctx: Context, host, port):
         else:
             hack.pwncat()
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -109,8 +110,8 @@ def msfvenom(ctx: Context, host, port, format):
     try:
         hack.msfvenom(host=host, port=port, format=format)
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)

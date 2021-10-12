@@ -1,11 +1,12 @@
 from pathlib import Path
 
 import yaml
+import logging
 
-from ..cli import Context
-from ..config import (SUBFINDER_CENSYS_SECRET, SUBFINDER_CENSYS_USERNAME,
-                      SUBFINDER_SHODAN_API_KEY)
-from ..utilities.utils import Utils
+from ..main import Context
+from ..utils.config import (SUBFINDER_CENSYS_SECRET, SUBFINDER_CENSYS_USERNAME,
+                            SUBFINDER_SHODAN_API_KEY)
+from ..utils.utils import Utils
 
 # ------------------------------------------------------------------------------
 #
@@ -19,7 +20,7 @@ class HackService:
     def __init__(self, ctx: Context):
         self.ctx: Context = ctx
         self.utils: Utils = self.ctx.utils
-        self.utils.logging.debug('hack-service is initiated')
+        logging.log(logging.DEBUG, 'hack-service is initiated')
 
     # --------------------------------------------------------------------------
     #
@@ -31,14 +32,14 @@ class HackService:
         service_name = 'RECON'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'page', host)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop(f'clone page {host}', [
             ['wget', '-r', '-nHp', host, '-P', path],
             ['tee', f'{path}/page_clone.log']
         ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -50,11 +51,11 @@ class HackService:
         service_name = 'RECON'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/recon', domain)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         sources = []
         if mode == 'subfinder' or mode == 'censys':
-            self.utils.logging.debug('Create subfinder conf with keys...')
+            logging.log(logging.DEBUG, 'Create subfinder conf with keys...')
             subfinder_config_path = f'{self.utils.get_user_path()}/.config/subfinder'
             subfinder_config_file = 'config.yaml'
 
@@ -102,8 +103,8 @@ class HackService:
             Path(subfinder_config_path).mkdir(parents=True, exist_ok=True)
             with open(f'{subfinder_config_path}/{subfinder_config_file}', 'w') as file:
                 yaml.dump(data, file)
-                self.utils.logging.debug(f'... {subfinder_config_path}/{subfinder_config_file} ...')
-                self.utils.logging.debug('... subfinder conf with keys created')
+                logging.log(logging.DEBUG, f'... {subfinder_config_path}/{subfinder_config_file} ...')
+                logging.log(logging.DEBUG, '... subfinder conf with keys created')
 
         options_1 = ['-t', str(threads), '--recursive', '-v', '-oJ', '-nW']
         options_2 = ['-t', str(threads), '--recursive', '-v', '-oJ', '-nW', '--sources', ",".join(sources)]
@@ -166,7 +167,7 @@ class HackService:
                 ['tee', f'{path}/gau.log']
             ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -178,7 +179,7 @@ class HackService:
         service_name = 'DNS/DIG'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/dig', host)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         if ns and len(ns) > 0 and not ns.startswith("@"):
             ns = f"@{ns}"
@@ -208,25 +209,25 @@ class HackService:
             ['tee', f'{path}/dig_dns_axfr_multi.log '],
         ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
         service_name = 'DNS/HOST'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/host', host)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop('host', [
             ['host', '-aRR', host],
             ['tee', f'{path}/host.log'],
         ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     def tls(self, domain: str) -> None:
         service_name = 'TLS'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/tls', domain)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop('openssl [1/4]', [
             ['openssl', 's_client', '-connect', domain, '-showcerts'],
@@ -247,7 +248,7 @@ class HackService:
             ['tee', f'{path}/openssl_fingerprint.log']
         ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -260,7 +261,7 @@ class HackService:
         service_name = 'NMAP'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/namp', host) if path == None else path
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         host = host.split(" ")
 
@@ -306,15 +307,15 @@ class HackService:
                 ['xsltproc', f'{path}/inital.xml', '-o', f'{path}/inital.html']
             ])
 
-            self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+            logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
         else:
-            self.utils.logging.warning('[-] No ports found')
+            logging.log(logging.WARNING, '[-] No ports found')
 
     def masscan(self, host: str, rate: int = 10000, options: list = []) -> None:
         service_name = 'MASSCAN'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/masscan', host)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop('masscan', [
             ['sudo', 'masscan', host, '-oX', f'{path}/masscan.xml'] + options
@@ -333,18 +334,18 @@ class HackService:
         ])
 
         if ports != None:
-            self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+            logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
             n_options = ['-sV', '-O', f'-T{t_scan}', '-PE', '-Pn', '-n', '--open', '-vv']
             self.nmap(host=host, ports=ports, options=n_options, path=path)
         else:
-            self.utils.logging.warning('[-] No ports found')
+            logging.log(logging.WARNING, '[-] No ports found')
 
     def gobuster(self, host: str, type: str = 'dir', threads: int = 10,
                  w_list: str = None, options: list = [], exclude_length: int = None) -> None:
         service_name = 'GOBUSTER'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/gobuster', host)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         # wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list == None else w_list
         wordlist = '/opt/git/SecLists/Discovery/Web-Content/raft-medium-words.txt' if w_list == None else w_list
@@ -394,15 +395,15 @@ class HackService:
                 ['tee', f'{path}/gobuster_back.log']
             ])
         else:
-            self.utils.logging.warning(f'gobuster type "{type}" not defined')
+            logging.log(logging.WARNING, f'gobuster type "{type}" not defined')
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     def kitrunner(self, host: str,  w_list: str = None) -> None:
         service_name = 'KITRUNNER'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/kr', host)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         wordlist = "/opt/git/kiterunner/routes.kite" if w_list == None else w_list
         max_connection_per_host = 10
@@ -414,7 +415,7 @@ class HackService:
             ['tee', f'{path}/kr_scan.log']
         ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -429,7 +430,7 @@ class HackService:
         for host in hosts.split(' '):
             for port in ports.split(','):
                 path = self.utils.create_service_folder(f'scan/smb', host)
-                self.utils.logging.debug(f'new folder created:: {path}')
+                logging.log(logging.DEBUG, f'new folder created:: {path}')
 
                 # SMBCLIENT ############################################################
                 ########################################################################
@@ -440,9 +441,9 @@ class HackService:
 
                 print('')
                 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-                self.utils.logging.notice(f'use "smbclient //{host}/..." to check the results')
-                self.utils.logging.notice('usefull commands "dir,get,put,..."')
-                self.utils.logging.notice(f'usefull commands "smbget -R smb://{host}/..."')
+                logging.log(logging.NOTICE, f'use "smbclient //{host}/..." to check the results')
+                logging.log(logging.NOTICE, 'usefull commands "dir,get,put,..."')
+                logging.log(logging.NOTICE, f'usefull commands "smbget -R smb://{host}/..."')
                 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
                 print('')
 
@@ -455,11 +456,11 @@ class HackService:
 
                 print('')
                 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-                self.utils.logging.notice(f'use "smbmap -u \'...\' -p \'\' -R -H {host}" to check the results')
+                logging.log(logging.NOTICE, f'use "smbmap -u \'...\' -p \'\' -R -H {host}" to check the results')
                 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
                 print('')
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
         # NMAP #################################################################
         ########################################################################
@@ -472,12 +473,12 @@ class HackService:
         service_name = 'RPC'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/rpc', hosts)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         # for host in hosts.split(' '):
         #     for port in ports.split(','):
         #         path = self.utils.create_service_folder(f'scan/smb', host)
-        #         self.utils.logging.debug(f'new folder created:: {path}')
+        #         logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         #         # SMBCLIENT ############################################################
         #         ########################################################################
@@ -488,12 +489,12 @@ class HackService:
 
         #         print('')
         #         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        #         self.utils.logging.notice(f'use "smbclient //{host}/..." to check the results')
-        #         self.utils.logging.notice('usefull commands "dir,get,put,..."')
+        #         logging.log(logging.NOTICE, f'use "smbclient //{host}/..." to check the results')
+        #         logging.log(logging.NOTICE, 'usefull commands "dir,get,put,..."')
         #         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         #         print('')
 
-        # self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        # logging.log(logging.INFO,f'[*] {service_name} Done! View the log reports under {path}/')
 
         # NMAP #################################################################
         ########################################################################
@@ -511,20 +512,20 @@ class HackService:
         service_name = 'WHATWEB'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/whatweb', host)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop('whatweb silent', [
             ['whatweb', host, '-a', str(silent), '-v',
              f'--log-verbose={path}/whatweb_v.log', f'--log-json={path}/whatweb_j.log']
         ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     def wpscan(self, host: str, silent: bool = False) -> None:
         service_name = 'WPSCAN'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/wpscan', host)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         mode = ['--plugins-detection', 'aggressive'] if silent == False else ['--plugins-detection', 'passive']
 
@@ -533,7 +534,7 @@ class HackService:
             ['tee', f'{path}/wpscan.log']
         ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -545,7 +546,7 @@ class HackService:
         service_name = 'PWN'
         self.utils.log_runBanner(service_name)
         path = self.utils.create_service_folder(f'pwn/checks', file)
-        self.utils.logging.debug(f'new folder created:: {path}')
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
 
         cmd_result = self.utils.run_command_output_loop(f'pwn file', [
             ['file', file],
@@ -560,7 +561,7 @@ class HackService:
             ['tee', f'{path}/checksec.log']
         ])
 
-        self.utils.logging.info(f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
 # ------------------------------------------------------------------------------
 #
