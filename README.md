@@ -14,6 +14,7 @@
 ---
 
 A python wrapper to call recon services with predefined params.
+_python with `setup.py` and `click` for **cli**_
 
 ## dependencies
 
@@ -94,7 +95,7 @@ A python wrapper to call recon services with predefined params.
 ## install
 
 ```sh
-$pip install .
+$pip3 install starlette && pip3 install .
 ```
 
 ### DEBUG
@@ -102,5 +103,5 @@ $pip install .
 ```sh
 $python3 -m venv ./venv
 $source venv/bin/activate
-$pip install --editable .
+$pip3 install starlette && pip3 install --editable .
 ```

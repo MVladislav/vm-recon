@@ -1,5 +1,7 @@
 click
 coloredlogs
 verboselogs
+starlette
+
 click-config-file
 pyyaml
