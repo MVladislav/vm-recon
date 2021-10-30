@@ -36,12 +36,33 @@ def cli(ctx: Context):
 @click.option('-n', '--nameserver', type=str, help='define nameserver [""]', default="")
 @click.option('-t', '--record_type', type=str, help='define record type [ANY]', default="ANY")
 @click.option('-p', '--port', type=int, help='define port [53]', default=53)
+@click.option('-is', '--is_subdomain', is_flag=True, help='is host a subdomain')
 @pass_context
-def dns(ctx: Context, host, nameserver, record_type, port):
-    '''DNS scan'''
+def dns(ctx: Context, host, nameserver, record_type, port, is_subdomain):
+    '''
+        DNS scan
+    '''
     hack: HackService = ctx.hack
     try:
-        hack.dns(host=host, ns=nameserver, record_type=record_type, port=port)
+        hack.dns(host=host, ns=nameserver, record_type=record_type, port=port, is_subdomain=is_subdomain)
+    except KeyboardInterrupt as k:
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
+        sys.exit(5)
+    except Exception as e:
+        logging.log(logging.CRITICAL, e)
+        sys.exit(2)
+
+
+@cli.command()
+@click.option('-d', '--domain', type=str, help='domain to scan for', required=True)
+@pass_context
+def domain(ctx: Context, domain: str):
+    '''
+        DOMAIN scan
+    '''
+    hack: HackService = ctx.hack
+    try:
+        hack.domain(domain=domain)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
@@ -54,7 +75,9 @@ def dns(ctx: Context, host, nameserver, record_type, port):
 @click.option('-d', '--domain', type=str, help='domain to scan for', required=True)
 @pass_context
 def tls(ctx: Context, domain):
-    '''TLS scan'''
+    '''
+        TLS scan
+    '''
     hack: HackService = ctx.hack
     try:
         hack.tls(domain=domain)
@@ -82,7 +105,9 @@ def tls(ctx: Context, domain):
 @click.option('-s', '--silent', is_flag=True, help='scan silent with predefined mode')
 @pass_context
 def nmap(ctx: Context, host, udp, options, options_append, rate, silent_mode, silent):
-    '''NMAP scan'''
+    '''
+        NMAP scan
+    '''
     hack: HackService = ctx.hack
     try:
 
@@ -156,7 +181,9 @@ def gobuster(ctx: Context, host, mode, threads, wordlist, options, options_appen
 @click.option('-w', '--wordlist', type=str, help='wordlist to use')
 @pass_context
 def kitrunner(ctx: Context, host, wordlist):
-    '''KITRUNNER scan'''
+    '''
+        KITRUNNER scan
+    '''
     hack: HackService = ctx.hack
     try:
         hack.kitrunner(host=host, w_list=wordlist)
@@ -179,7 +206,9 @@ def kitrunner(ctx: Context, host, wordlist):
 @click.option('-p', '--ports', type=str, help='ports to use for scan (multiple split by ",")', required=False, default='139,445')
 @pass_context
 def smb(ctx: Context, hosts, ports):
-    '''SMB scan'''
+    '''
+        SMB scan
+    '''
     hack: HackService = ctx.hack
     try:
         hack.smb(hosts=hosts, ports=ports)
@@ -196,7 +225,9 @@ def smb(ctx: Context, hosts, ports):
 @click.option('-p', '--ports', type=str, help='ports to use for scan (multiple split by ",")', required=False, default='111')
 @pass_context
 def rpc(ctx: Context, hosts, ports):
-    '''RPC scan'''
+    '''
+        RPC scan
+    '''
     hack: HackService = ctx.hack
     try:
         hack.rpc(hosts=hosts, ports=ports)
@@ -219,7 +250,9 @@ def rpc(ctx: Context, hosts, ports):
 @click.option('-s', '--silent', type=click.Choice(['1', '2', '3']), help='silent mode [3]', default="3")
 @pass_context
 def whatweb(ctx: Context, host, silent):
-    '''WHATWEB scan'''
+    '''
+        WHATWEB scan
+    '''
     hack: HackService = ctx.hack
     try:
         hack.whatweb(host=host, silent=silent)
@@ -236,7 +269,9 @@ def whatweb(ctx: Context, host, silent):
 @click.option('-s', '--silent', is_flag=True, help='silent mode')
 @pass_context
 def wpscan(ctx: Context, host, silent):
-    '''WPSCAN scan'''
+    '''
+        WPSCAN scan
+    '''
     hack: HackService = ctx.hack
     try:
         hack.wpscan(host=host, silent=silent)
@@ -259,7 +294,7 @@ def wpscan(ctx: Context, host, silent):
 @click.option('-o', '--org', type=str, help='org to scan for', required=True)
 @click.option('-n', '--nameserver', type=str, help='the DNS server to use [1.1.1.1]', default="1.1.1.1")
 @click.option('-m', '--mode', type=click.Choice(
-    ['gospider', 'hakrawler', 'emailfinder', 'subfinder', 'subfinder_api', 'amass_whois', 'amass_org', 'passive', 'active', 'gau']),
+    ['gospider', 'hakrawler', 'emailfinder', 'subfinder', 'subfinder_api', 'amass_whois', 'amass_org', 'passive', 'active', 'gau', 'theHarvester']),
     help='recon tool to use (gospider)', default="gospider")
 @click.option('-t', '--threads', type=int, help='threads to use [10]', default=10)
 @click.option('-dp', '--depth', type=int, help='depth to scan for [2]', default=2)
@@ -291,7 +326,9 @@ def recon(ctx: Context, domain, org, mode, threads, depth, nameserver):
 @click.option('-f', '--file', type=click.Path(writable=True), help='file to check', required=True)
 @pass_context
 def pwd(ctx: Context, file):
-    '''PWD scan'''
+    '''
+        PWD scan
+    '''
     hack: HackService = ctx.hack
     try:
         hack.pwd(file=file)
