@@ -53,7 +53,7 @@ class HackService:
     #
     # --------------------------------------------------------------------------
 
-    def recon(self, domain: str, org: str, mode: str = "gospider", threads: int = 10, depth: int = 2, ns: str = "1.1.1.1") -> None:
+    def recon(self, domain: str, org: str, mode: str = 'gospider', threads: int = 10, depth: int = 2, ns: str = '1.1.1.1') -> None:
         '''
             ...
         '''
@@ -116,66 +116,66 @@ class HackService:
                 logging.log(logging.DEBUG, '... subfinder conf with keys created')
 
         options_1 = ['-t', str(threads), '--recursive', '-v', '-oJ', '-nW']
-        options_2 = ['-t', str(threads), '--recursive', '-v', '-oJ', '-nW', '--sources', ",".join(sources)]
+        options_2 = ['-t', str(threads), '--recursive', '-v', '-oJ', '-nW', '--sources', ','.join(sources)]
 
-        if mode == "gospider":
+        if mode == 'gospider':
             self.utils.run_command_output_loop(f'recon {mode}', [
                 ['gospider', '-s', domain, '-o', f'{path}/gospider', '-c',
                     str(threads), '-d', str(depth), '--other-source', '--include-subs'],
                 ['tee', f'{path}/gospider.log']
             ])
-        elif mode == "hakrawler":
+        elif mode == 'hakrawler':
             self.utils.run_command_output_loop(f'recon {mode}', [
                 ['echo', domain],
-                # -h "Cookie: foo=bar;Authorization: token"
+                # -h 'Cookie: foo=bar;Authorization: token'
                 ['hakrawler', '-d', str(depth), '-t', str(threads), '-insecure'],
                 ['tee', f'{path}/hakrawler.log']
             ])
-        elif mode == "emailfinder":
+        elif mode == 'emailfinder':
             self.utils.run_command_output_loop(f'recon {mode}', [
                 ['emailfinder', '-d', domain],
                 ['tee', f'{path}/emailfinder.log']
             ])
-        elif mode == "subfinder":
+        elif mode == 'subfinder':
             self.utils.run_command_output_loop(f'recon {mode}', [
                 ['subfinder', '-d', domain, '-o', f'{path}/subfinder_rec', '-r', ns] + options_1,
                 ['httpx'],
                 ['tee', f'{path}/subfinder_rec.log']
             ])
-        elif mode == "subfinder_api":
+        elif mode == 'subfinder_api':
             self.utils.run_command_output_loop(f'recon {mode}', [
                 ['subfinder', '-d', domain, '-o', f'{path}/subfinder_censys', '-r', ns] + options_2,
                 ['tee', f'{path}/subfinder_censys.log']
             ])
-        elif mode == "amass_whois":
+        elif mode == 'amass_whois':
             self.utils.run_command_output_loop(f'recon {mode}', [
                 ['amass', 'intel', '-d', domain, '-whois', '-r', ns, '-o', f'{path}/amass_whois'],
                 ['tee', f'{path}/amass_whois.log']
             ])
-        elif mode == "amass_org":
+        elif mode == 'amass_org':
             self.utils.run_command_output_loop(f'recon {mode}', [
                 ['amass', 'intel', '-org', org, '-r', ns, '-o', f'{path}/amass_org'],
                 ['tee', f'{path}/amass_org.log']
             ])
-        elif mode == "passive":
+        elif mode == 'passive':
             self.utils.run_command_output_loop(f'recon {mode}', [
                 ['amass', 'enum', '-passive', '-d', domain, '-r', ns, '-o', f'{path}/amass_passive'],
                 ['tee', f'{path}/amass_passive.log']
             ])
-        elif mode == "active":
+        elif mode == 'active':
             self.utils.run_command_output_loop(f'recon {mode}', [
                 ['amass', 'enum', '-active', '-src', '-ip', '-brute', '-min-for-recursive',
                     str(depth), '-d', domain, '-r', ns, '-o', f'{path}/amass_active'],
                 ['tee', f'{path}/amass_active.log']
             ])
-        elif mode == "gau":
+        elif mode == 'gau':
             self.utils.run_command_output_loop(f'recon {mode}', [
                 ['gau', '--subs', domain],
                 ['cut', '-d', '/', '-f', '3'],
                 ['sort', '-u'],
                 ['tee', f'{path}/gau.log']
             ])
-        elif mode == "theHarvester":
+        elif mode == 'theHarvester':
             sources = ['baidu', 'bufferoverun', 'crtsh', 'hackertarget', 'otx', 'projecdiscovery',
                        'rapiddns', 'sublist3r', 'threatcrowd', 'trello', 'urlscan', 'vhost', 'virustotal', 'zoomeye']
             for source in sources:
@@ -321,53 +321,71 @@ class HackService:
         path = self.utils.create_service_folder(f'scan/namp', host) if path is None else path
         logging.log(logging.DEBUG, f'new folder created:: {path}')
 
-        host = host.split(" ")
+        host = host.split(' ')
 
+        port_range_scan = '-p-'  # '-F-' | '--top-ports=1000'
         t_scan = 4
         if silent:
             rate = 100
             t_scan = 1
             for option in options:
-                if "-T" in option:
+                if '-T' in option:
                     option = f'-T{t_scan}'
 
-        if ports is None:
-            if udp:
-                ports = self.utils.run_command_output_loop('nmap udp ports', [
-                    ['sudo', 'nmap', '-sU', '-sT', '--max-retries=1', '-p-', f'--min-rate={rate}', f'-T{t_scan}'] + host,
-                    ['grep', '^[0-9]'],
-                    ['cut', '-d', '/', '-f', '1', ],
-                    ['sort'],
-                    ['uniq'],
-                    ['tr', '\\n', ',', ],
-                    ['sed', 's/,$//'],
+        hosts = self.utils.run_command_output_loop('nmap udp ports', [
+            ['sudo', 'nmap', '-sn', '-PE', '-n', f'--min-rate={rate}', f'-T{t_scan}'] + host,
+            ['grep', 'for'],
+            ['cut', '-d', ' ', '-f5'],
+            ['sort'],
+            ['uniq'],
+            ['tr', '\\n', ' '],
+            ['sed', 's/ $//'],
+        ])
+
+        if hosts is not None:
+            hosts = hosts.split(' ')
+            if ports is None:
+                if udp:
+                    ports = self.utils.run_command_output_loop('nmap udp ports', [
+                        ['sudo', 'nmap', '-sU', '-sT', '-Pn', '-n', '--disable-arp-ping',
+                            '--max-retries=1', '-p-', f'--min-rate={rate}', f'-T{t_scan}'] + hosts,
+                        ['grep', '^[0-9]'],
+                        ['cut', '-d', '/', '-f', '1'],
+                        ['sort'],
+                        ['uniq'],
+                        ['tr', '\\n', ','],
+                        ['sed', 's/,$//'],
+                    ])
+                else:
+                    ports = self.utils.run_command_output_loop('nmap tcp ports', [
+                        ['sudo', 'nmap', '-Pn', '-n', '--disable-arp-ping', '-p-', f'--min-rate={rate}', f'-T{t_scan}'] + hosts,
+                        ['grep', '^[0-9]'],
+                        ['cut', '-d', '/', '-f', '1'],
+                        ['sort'],
+                        ['uniq'],
+                        ['tr', '\\n', ','],
+                        ['sed', 's/,$//'],
+                    ])
+
+            # --initial-rtt-timeout 50ms --max-rtt-timeout 100ms
+            if ports is not None:
+                self.utils.run_command_output_loop('nmap scan', [
+                    ['sudo', 'nmap', '-p', ports, '--packet-trace', '--reason', f'--min-rate={rate}', f'-T{t_scan}',
+                        '-oX', f'{path}/inital.xml', '-oA', f'{path}/inital'] + hosts + options
                 ])
+
+                self.utils.run_command_output_loop('nmap convert xls', [
+                    ['nmap-converter.py', f'{path}/inital.xml', '-o', f'{path}/inital.xls']
+                ])
+                self.utils.run_command_output_loop('nmap convert html', [
+                    ['xsltproc', f'{path}/inital.xml', '-o', f'{path}/inital.html']
+                ])
+
+                logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
             else:
-                ports = self.utils.run_command_output_loop('nmap tcp ports', [
-                    ['sudo', 'nmap', '-p-', f'--min-rate={rate}', f'-T{t_scan}'] + host,
-                    ['grep', '^[0-9]'],
-                    ['cut', '-d', '/', '-f', '1'],
-                    ['sort'],
-                    ['uniq'],
-                    ['tr', '\\n', ','],
-                    ['sed', 's/,$//'],
-                ])
-
-        if ports is not None:
-            self.utils.run_command_output_loop('nmap scan', [
-                ['sudo', 'nmap', '-p', ports, '-oX', f'{path}/inital.xml', '-oN', f'{path}/inital.log'] + host + options
-            ])
-
-            self.utils.run_command_output_loop('nmap convert xls', [
-                ['nmap-converter.py', f'{path}/inital.xml', '-o', f'{path}/inital.xls']
-            ])
-            self.utils.run_command_output_loop('nmap convert html', [
-                ['xsltproc', f'{path}/inital.xml', '-o', f'{path}/inital.html']
-            ])
-
-            logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
+                logging.log(logging.WARNING, '[-] No ports found')
         else:
-            logging.log(logging.WARNING, '[-] No ports found')
+            logging.log(logging.WARNING, '[-] No host are reachable')
 
     def masscan(self, host: str, rate: int = 10000, options: list = []) -> None:
         '''
@@ -479,7 +497,7 @@ class HackService:
         path = self.utils.create_service_folder(f'scan/kr', host)
         logging.log(logging.DEBUG, f'new folder created:: {path}')
 
-        wordlist = "/opt/git/kiterunner/routes.kite" if w_list is None else w_list
+        wordlist = '/opt/git/kiterunner/routes.kite' if w_list is None else w_list
         max_connection_per_host = 10
         ignore_length = 34
 
