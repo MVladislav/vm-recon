@@ -324,8 +324,10 @@ class HackService:
         host = host.split(' ')
 
         port_range_scan = '-p-'  # '-F-' | '--top-ports=1000'
+        mode_decoy = []
         t_scan = 4
         if silent:
+            mode_decoy = ['-D', 'RND:5']
             rate = 100
             t_scan = 1
             for option in options:
@@ -333,7 +335,7 @@ class HackService:
                     option = f'-T{t_scan}'
 
         hosts = self.utils.run_command_output_loop('nmap udp ports', [
-            ['sudo', 'nmap', '-sn', '-PE', '-n', f'--min-rate={rate}', f'-T{t_scan}'] + host,
+            ['sudo', 'nmap', '-sn', '-PE', '-n', f'--min-rate={rate}', f'-T{t_scan}'] + mode_decoy + host,
             ['grep', 'for'],
             ['cut', '-d', ' ', '-f5'],
             ['sort'],
@@ -348,7 +350,7 @@ class HackService:
                 if udp:
                     ports = self.utils.run_command_output_loop('nmap udp ports', [
                         ['sudo', 'nmap', '-sU', '-sT', '-Pn', '-n', '--disable-arp-ping',
-                            '--max-retries=1', '-p-', f'--min-rate={rate}', f'-T{t_scan}'] + hosts,
+                            '--max-retries=1', port_range_scan, f'--min-rate={rate}', f'-T{t_scan}'] + mode_decoy + hosts,
                         ['grep', '^[0-9]'],
                         ['cut', '-d', '/', '-f', '1'],
                         ['sort'],
@@ -358,7 +360,7 @@ class HackService:
                     ])
                 else:
                     ports = self.utils.run_command_output_loop('nmap tcp ports', [
-                        ['sudo', 'nmap', '-Pn', '-n', '--disable-arp-ping', '-p-', f'--min-rate={rate}', f'-T{t_scan}'] + hosts,
+                        ['sudo', 'nmap', '-Pn', '-n', '--disable-arp-ping', port_range_scan, f'--min-rate={rate}', f'-T{t_scan}'] + mode_decoy + hosts,
                         ['grep', '^[0-9]'],
                         ['cut', '-d', '/', '-f', '1'],
                         ['sort'],
@@ -368,10 +370,11 @@ class HackService:
                     ])
 
             # --initial-rtt-timeout 50ms --max-rtt-timeout 100ms
+            # nmap -T1 --min-rate=100 -O -n -sn -Pn -sA
             if ports is not None:
                 self.utils.run_command_output_loop('nmap scan', [
                     ['sudo', 'nmap', '-p', ports, '--packet-trace', '--reason', f'--min-rate={rate}', f'-T{t_scan}',
-                        '-oX', f'{path}/inital.xml', '-oA', f'{path}/inital'] + hosts + options
+                        '-oX', f'{path}/inital.xml', '-oA', f'{path}/inital'] + mode_decoy + hosts + options
                 ])
 
                 self.utils.run_command_output_loop('nmap convert xls', [
