@@ -207,20 +207,19 @@ class HackService:
         if ns and len(ns) > 0 and not ns.startswith('@'):
             ns = f'@{ns}'
 
+        mode_plus = ['+noall', '+answer', '+nocomments', '+multi']
         mode_subdomain = ''
         if is_subdomain is True:
             mode_subdomain = 'a'
-        mode_test_01 = ['', 'TXT']
-        mode_test_02 = ['A', 'NS', 'MX', 'CNAME', 'AXFR']  # '+multi'
-        mode_test_03 = ['', 'dkmi._', '_dmarc.']
+        mode_test_01 = ['', 'TXT', 'A', 'NS', 'MX', 'CNAME', 'AXFR', 'SOA']
+        mode_test_02 = ['', 'dkmi._', '_dmarc.']
 
         for test_01 in mode_test_01:
             for test_02 in mode_test_02:
-                for test_03 in mode_test_03:
-                    self.utils.run_command_output_loop('dig', [
-                        ['dig', mode_subdomain, record_type, test_01, test_02, '-p', str(port), ns, f'{test_03}{host}'],
-                        ['tee', f'{path}/dig_dns_{test_01}_{test_02}_{test_03}.log'],
-                    ])
+                self.utils.run_command_output_loop('dig', [
+                    ['dig', mode_subdomain, record_type, test_01] + mode_plus + ['-p', str(port), ns, f'{test_02}{host}'],
+                    ['tee', f'{path}/dig_dns_{test_01}_{test_02}.log'],
+                ])
 
         logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
@@ -402,6 +401,12 @@ class HackService:
             self.nmap(host=host, ports=ports, options=n_options, path=path)
         else:
             logging.log(logging.WARNING, '[-] No ports found')
+
+    # TODO: add ffuf
+    # ffuf -w ./vhosts -u http://10.129.42.195 -H "HOST: FUZZ.www.inlanefreight.htb"
+    # ffuf -recursion -recursion-depth 1 -u http://192.168.10.10/FUZZ -w /opt/useful/SecLists/Discovery/Web-Content/raft-small-directories-lowercase.txt
+    # cewl -m5 --lowercase -w wordlist.txt http://192.168.10.10
+    # ffuf -w ./folders.txt:FOLDERS,./wordlist.txt:WORDLIST,./extensions.txt:EXTENSIONS -u http://192.168.10.10/FOLDERS/WORDLISTEXTENSIONS
 
     def gobuster(self, host: str, type: str = 'dir', threads: int = 10,
                  w_list: str = None, options: list = [], exclude_length: int = None) -> None:
