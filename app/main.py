@@ -1,11 +1,12 @@
 import logging
 import os
+import time
 
 import click
 
-from .utils.config import BASE_PATH, PROJECT_NAME, VERSION
+from .utils.config import VERSION
 from .utils.logHelper import LogHelper
-from .utils.utils import Utils
+from .utils.utils import Context, Utils, pass_context
 
 # ------------------------------------------------------------------------------
 #
@@ -26,23 +27,8 @@ print('* Copyright of MVladislav, 2021                                *')
 print('* https://mvladislav.online                                    *')
 print('* https://github.com/MVladislav                                *')
 print('****************************************************************')
-#
 print()
 
-# ------------------------------------------------------------------------------
-#
-#
-#
-# ------------------------------------------------------------------------------
-
-
-class Context:
-
-    def __init__(self):
-        self.project = PROJECT_NAME
-        self.base_path = BASE_PATH
-
-        self.utils: Utils = None
 
 # ------------------------------------------------------------------------------
 #
@@ -77,8 +63,6 @@ class ComplexCLI(click.MultiCommand):
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'], ignore_unknown_options=True, auto_envvar_prefix='COMPLEX')
 
-pass_context = click.make_pass_decorator(Context, ensure=True)
-
 
 @click.command(cls=ComplexCLI, context_settings=CONTEXT_SETTINGS)
 @click.version_option(VERSION)
@@ -95,7 +79,14 @@ def cli(ctx: Context, verbose, home, project, disable_split_project, disable_spl
 
         Example: "{PROJECT_NAME} -vv -p 'nice project' -dsh --home . <COMMAND> [OPTIONS] <COMMAND> [OPTIONS]"
     '''
+
+    # INIT: log helper global
+    LogHelper(logging_verbose=verbose)
+
     logging.log(logging.DEBUG, 'init start_up...')
+
+    # INIT: utils defaults to use ctx global
+    ctx.utils = Utils(ctx)
 
     # SET: default global values
     if verbose != None:
@@ -108,8 +99,4 @@ def cli(ctx: Context, verbose, home, project, disable_split_project, disable_spl
     ctx.disable_split_host = disable_split_host
     ctx.print_only_mode = print_only_mode
 
-    # INIT: log helper global
-    LogHelper(logging_verbose=verbose)
-
-    # INIT: utils defaults to use ctx global
-    ctx.utils = Utils(ctx)
+    ctx.utils.update(ctx=ctx)

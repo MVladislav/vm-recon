@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - first release
-- has no changelog add (will start from 2021-10-12)
+- has no changelog added (changelog will start from 2021-10-12)
 
-[unreleased]: https://github.com/.../.../compare/v1.0.0...HEAD
-[0.0.1]: https://github.com/.../.../releases/tag/v0.0.1
+[unreleased]: https://github.com/MVladislav/vm-recon/compare/v1.0.0...HEAD
+[0.0.1]: https://github.com/MVladislav/vm-recon/releases/tag/v0.0.1

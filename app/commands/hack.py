@@ -3,8 +3,8 @@ import sys
 
 import click
 
-from ..main import Context, pass_context
 from ..service.hack_service import HackService
+from ..utils.utils import Context, pass_context
 
 default_split_by = ';'
 

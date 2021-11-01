@@ -3,7 +3,7 @@ import sys
 
 import click
 
-from ..main import Context, pass_context
+from ..utils.utils import Context, pass_context
 from ..service.tool_service import DownloadWhat, ToolService
 
 # ------------------------------------------------------------------------------

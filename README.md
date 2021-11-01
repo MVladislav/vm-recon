@@ -1,4 +1,4 @@
-# VM HACK
+# VM RECON
 
 ```sh
     MVladislav
@@ -6,7 +6,7 @@
 
 ---
 
-- [VM HACK](#vm-hack)
+- [VM RECON](#vm-recon)
   - [dependencies](#dependencies)
   - [install](#install)
     - [DEBUG](#debug)
@@ -103,5 +103,5 @@ $pip3 install starlette && pip3 install .
 ```sh
 $python3 -m venv ./venv
 $source venv/bin/activate
-$pip3 install starlette && pip3 install --editable .
+$pip3 install starlette && pip3 install -v --editable .
 ```

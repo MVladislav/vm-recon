@@ -59,14 +59,15 @@ class LogHelper:
                 logger_name.removeHandler(handler)
             # # define an handle
             # logger_name.addHandler(logging.StreamHandler())
-            # define log level default
-            logger_name.setLevel(logging.getLevelName(LOGGING_LEVEL))
-            # add colered logs
-            coloredlogs.install(
-                level=logging.getLevelName(LOGGING_LEVEL),
-                fmt=log_format,
-                logger=logger_name
-            )
+            if not 'tqdm' in logger_name.name or not 'progressbar' in logger_name.name:
+                # define log level default
+                logger_name.setLevel(logging.getLevelName(LOGGING_LEVEL))
+                # add colered logs
+                coloredlogs.install(
+                    level=logging.getLevelName(LOGGING_LEVEL),
+                    fmt=log_format,
+                    logger=logger_name
+                )
 
         # # add colered logs
         # coloredlogs.install(level=logging.getLevelName(LOGGING_LEVEL), fmt=log_format)

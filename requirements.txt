@@ -1,7 +1,11 @@
+starlette
 click
 coloredlogs
 verboselogs
-starlette
+string-color
+progressbar2
 
-click-config-file
+maxminddb
+requests
+
 pyyaml

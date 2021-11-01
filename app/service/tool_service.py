@@ -2,8 +2,8 @@ import logging
 import re
 from enum import Enum
 
-from ..main import Context
-from ..utils.utils import Utils
+from ..utils.defaultLogBanner import log_runBanner
+from ..utils.utils import Context, Utils
 
 # ------------------------------------------------------------------------------
 #
@@ -39,7 +39,7 @@ class ToolService:
 
     def download(self, what: DownloadWhat):
         service_name = 'WGET'
-        self.utils.log_runBanner(service_name)
+        log_runBanner(service_name)
         path = self.utils.create_service_folder('download')
         logging.log(logging.DEBUG, f'new folder created:: {path}')
 
@@ -95,7 +95,7 @@ class ToolService:
 
     def nc(self, port: int = 9001):
         service_name = 'NC'
-        self.utils.log_runBanner(service_name)
+        log_runBanner(service_name)
         path = self.utils.create_service_folder('tool/nc')
         logging.log(logging.DEBUG, f'new folder created:: {path}')
 
@@ -104,7 +104,7 @@ class ToolService:
             use_sudo = ["sudo"]
 
         cmd = use_sudo + ['rlwrap', 'nc', '-lvnp', str(port)]
-        self.utils.log_runBanner(f'pwncat listening...')
+        log_runBanner(f'pwncat listening...')
         logging.log(logging.NOTICE, " ".join(cmd))
         self.utils.run_command_endless(command_list=cmd)
 
@@ -112,7 +112,7 @@ class ToolService:
 
     def pwncat(self, host: str = None, port: int = 9001):
         service_name = 'PWNCAT'
-        self.utils.log_runBanner(service_name)
+        log_runBanner(service_name)
         path = self.utils.create_service_folder('tool/pwncat')
         logging.log(logging.DEBUG, f'new folder created:: {path}')
 
@@ -124,7 +124,7 @@ class ToolService:
             use_sudo = ["sudo"]
 
         cmd = use_sudo + ['pwncat', '-l', str(port), '-vv', '--self-inject', f'/bin/sh:{host}:{port}']
-        self.utils.log_runBanner(f'pwncat listening...')
+        log_runBanner(f'pwncat listening...')
         logging.log(logging.NOTICE, " ".join(cmd))
         self.utils.run_command_endless(command_list=cmd)
 
@@ -138,7 +138,7 @@ class ToolService:
 
     def msfvenom(self, host: str, port: int, format: str = 'dll', file_arch: str = '64', os: str = 'windows'):
         service_name = 'MSFVENOM'
-        self.utils.log_runBanner(service_name)
+        log_runBanner(service_name)
         path = self.utils.create_service_folder('tool/msfvenom')
         logging.log(logging.DEBUG, f'new folder created:: {path}')
 
@@ -170,7 +170,7 @@ class ToolService:
 
     def pywhat(self, file: str):
         service_name = 'PYWHAT'
-        self.utils.log_runBanner(service_name)
+        log_runBanner(service_name)
         path = self.utils.create_service_folder('tool/pywhat')
         logging.log(logging.DEBUG, f'new folder created:: {path}')
 
@@ -189,7 +189,7 @@ class ToolService:
 
     def extract(self, file: str):
         service_name = 'EXTRACT'
-        self.utils.log_runBanner(service_name)
+        log_runBanner(service_name)
         path = self.utils.create_service_folder('tool/extract')
         logging.log(logging.DEBUG, f'new folder created:: {path}')
 
