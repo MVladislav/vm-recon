@@ -8,6 +8,7 @@ from ..utils.utils import Context, pass_context
 
 default_split_by = ';'
 
+
 # ------------------------------------------------------------------------------
 #
 #
@@ -49,7 +50,7 @@ def dns(ctx: Context, host, nameserver, record_type, port, is_subdomain):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 
@@ -67,7 +68,7 @@ def domain(ctx: Context, domain: str):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 
@@ -85,7 +86,7 @@ def tls(ctx: Context, domain):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -97,14 +98,15 @@ def tls(ctx: Context, domain):
 
 @cli.command()
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
+@click.option('-p', '--ports', type=str, help=f'define ports (seperated by "{default_split_by}") [None]', default=None)
 @click.option('-udp', is_flag=True, help='enables udp port scan instead of tcp')
 @click.option('-o', '--options', type=str, help=f'options to scan with (seperated by "{default_split_by}") [None]', default=None)
 @click.option('-oa', '--options_append', is_flag=True, help='append new options to existing option list')
-@click.option('-r', '--rate', type=int, help='rate to scan ports for [1000]', default=1000)
+@click.option('-r', '--rate', type=int, help='rate to scan ports for [10000]', default=10000)
 @click.option('-sm', '--silent-mode', type=int, help='value to use in -T* [4]', default=4)
 @click.option('-s', '--silent', is_flag=True, help='scan silent with predefined mode')
 @pass_context
-def nmap(ctx: Context, host, udp, options, options_append, rate, silent_mode, silent):
+def nmap(ctx: Context, host, ports, udp, options, options_append, rate, silent_mode, silent):
     '''
         NMAP scan
     '''
@@ -120,12 +122,12 @@ def nmap(ctx: Context, host, udp, options, options_append, rate, silent_mode, si
             options = ['-sS', '-sV', '-O', f'-T{silent_mode}', '-PE',
                        '--open', '-sC', '--script=vuln', '--script=discovery', '-vv']
 
-        hack.nmap(host=host, udp=udp, options=options, rate=rate, silent=silent)
+        hack.nmap(host=host, ports=ports, udp=udp, options=options, rate=rate, silent=silent)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 
@@ -172,7 +174,7 @@ def gobuster(ctx: Context, host, mode, threads, wordlist, options, options_appen
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 
@@ -191,7 +193,7 @@ def kitrunner(ctx: Context, host, wordlist):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -216,7 +218,7 @@ def smb(ctx: Context, hosts, ports):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 
@@ -235,7 +237,7 @@ def rpc(ctx: Context, hosts, ports):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -260,7 +262,7 @@ def whatweb(ctx: Context, host, silent):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 
@@ -279,7 +281,7 @@ def wpscan(ctx: Context, host, silent):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -312,7 +314,7 @@ def recon(ctx: Context, domain, org, mode, threads, depth, nameserver):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -336,5 +338,5 @@ def pwd(ctx: Context, file):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)

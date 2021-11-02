@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 import re
 import socket
 import subprocess
@@ -8,9 +9,13 @@ import time
 import unicodedata
 from pathlib import Path
 from shutil import which
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple, Union
 
 import click
+# from libnmap.objects.report import NmapReport
+# from libnmap.parser import NmapParser
+# from libnmap.process import NmapProcess
+from progress.spinner import PixelSpinner
 from progressbar import ETA, Bar, Counter, ProgressBar, Timer
 from stringcolor import bold
 
@@ -94,6 +99,7 @@ class Utils:
     def create_service_folder(self, name: str, host: str = None) -> str:
         path = f'{self.create_service_path(host)}/{name}'
         self.create_folder(path)
+        logging.log(logging.DEBUG, f'new folder created:: {path}')
         return path
 
     def create_service_path(self, host: str = None):
@@ -132,10 +138,10 @@ class Utils:
             else:
                 logging.log(logging.ERROR, f'the command "{command_list[index_to_check]}", did not exist')
         # termination with Ctrl+C
-        except KeyboardInterrupt:
-            print('process killed!')
+        except KeyboardInterrupt as k:
+            logging.log(logging.WARNING, f'process interupted! ({k})')
         except Exception as e:
-            logging.log(logging.CRITICAL, e)
+            logging.log(logging.CRITICAL, e, exc_info=True)
         is_running = False
         try:
             if sub_p != None:
@@ -149,37 +155,82 @@ class Utils:
         except:
             pass
 
-    def run_command(self, command_list=[], input: str = None, inner_loop: bool = False) -> str:
+    def run_command(self, command_list: List[str] = [], input: str = None, inner_loop: bool = False) -> Tuple[str, str]:
         sub_p = None
-        result = None
+        sub_std: Union[bytes, str] = None
+        sub_err: Union[bytes, str] = None
 
         if not self.ctx.print_only_mode:
             try:
                 index_to_check = 0
                 index_to_check = 1 if command_list[index_to_check] == 'sudo' else index_to_check
 
+                # if sudo is in command, first check into root
+                if index_to_check == 1:
+                    if self.prompt_sudo() != 0:
+                        sys.exit(4)
+
+                init_count = 1
+                time_check_running = 1
+                text_it_is_running = [
+                    "...yep, still running",
+                    "...no stress, process still running",
+                    "...process is aaalive ;)",
+                    "...we current still processing, please wait ... loooong time :P",
+                    "...still running bro"
+                ]
+
                 if self.is_tool(command_list[index_to_check]):
                     if input == None:
-                        sub_p: subprocess.CompletedProcess = subprocess.run(command_list, stdout=subprocess.PIPE)  # , shell=True
-                        result = sub_p.stdout
+                        with subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as sub_p:
+                            time.sleep(time_check_running)
+                            if sub_p.poll() is None:
+                                with PixelSpinner('Processing... ') as spinner:
+                                    while sub_p.poll() is None:
+                                        if init_count % 6 == 0:
+                                            spinner.message = f'{random.choice(text_it_is_running)} '
+                                            init_count = 1
+                                        spinner.next()
+                                        init_count += 1
+                                        time.sleep(time_check_running)
+                            (sub_std, sub_err) = sub_p.communicate()
                     else:
-                        sub_p: subprocess.Popen = subprocess.Popen(command_list, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-                        sub_p = sub_p.communicate(input.encode())[0]
-                        result = sub_p
+                        with subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE) as sub_p:
+                            # (sub_std, sub_err) = sub_p.communicate(input=input.encode())
+                            sub_p.stdin.write(input.encode())
+                            sub_p.stdin.close()
+                            time.sleep(time_check_running)
+                            if sub_p.poll() is None:
+                                with PixelSpinner('Processing... ') as spinner:
+                                    while sub_p.poll() is None:
+                                        if init_count % 6 == 0:
+                                            spinner.message = f'{random.choice(text_it_is_running)} '
+                                            init_count = 1
+                                        spinner.next()
+                                        init_count += 1
+                                        time.sleep(time_check_running)
+
+                            sub_std = sub_p.stdout.read()
+                            sub_err = sub_p.stderr.read()
                 else:
                     logging.log(logging.ERROR, f'the command "{command_list[index_to_check]}", did not exist')
-                    result = b"MISSING_COMMAND"
+                    sub_err = b"MISSING_COMMAND"
             # termination with Ctrl+C
             except KeyboardInterrupt as k:
                 if sub_p != None and type(sub_p) == subprocess.Popen:
                     sub_p.kill()
-                logging.log(logging.DEBUG, f'process interupted! ({k})')
+                logging.log(logging.WARNING, f'process interupted! ({k})')
                 if inner_loop:
                     raise KeyboardInterrupt
             except Exception as e:
-                logging.log(logging.CRITICAL, e)
-            if result != None:
-                return result.decode()
+                logging.log(logging.CRITICAL, e, exc_info=True)
+
+            if sub_std is not None:
+                sub_std = sub_std.decode()
+            if sub_err is not None and len(sub_err) > 0:
+                sub_err = sub_err.decode()
+                logging.log(logging.ERROR, sub_err)
+            return (sub_std, sub_err)
 
     def is_tool(self, name: str) -> bool:
         '''
@@ -187,21 +238,23 @@ class Utils:
         '''
         return which(name) is not None
 
-    def run_command_output_loop(self, msg: str, cmds=[], output: bool = True) -> str:
+    def run_command_output_loop(self, msg: str, cmds: List[List[str]] = [], output: bool = True) -> str:
         '''
             run command from list in a loop, and also optional pipe them into each other
             default exec function is "run_command" with different
         '''
-        log_runBanner(msg)
         cmd_result = None
         try:
+            log_runBanner(msg)
+            if len(cmds) <= 1:
+                output = False
             for cmd in cmds:
                 logging.log(logging.NOTICE, ' '.join(cmd))
                 if output:
-                    cmd_result = self.run_command(command_list=cmd, input=cmd_result, inner_loop=True)
+                    (cmd_result, std_err) = self.run_command(command_list=cmd, input=cmd_result, inner_loop=True)
                 else:
-                    cmd_result = self.run_command(command_list=cmd, inner_loop=True)
-                if cmd_result is not None and cmd_result == "MISSING_COMMAND":
+                    (cmd_result, std_err) = self.run_command(command_list=cmd, inner_loop=True)
+                if std_err is not None and std_err == "MISSING_COMMAND":
                     cmd_result = None
                     break
                 if cmd_result is not None:
@@ -214,9 +267,9 @@ class Utils:
                             break
             return cmd_result
         except KeyboardInterrupt as k:
-            logging.log(logging.DEBUG, f'process interupted! ({k})')
+            logging.log(logging.WARNING, f'process interupted! ({k})')
         except Exception as e:
-            logging.log(logging.CRITICAL, "x", e)
+            logging.log(logging.CRITICAL, e, exc_info=True)
         return cmd_result
 
     # --------------------------------------------------------------------------
@@ -263,6 +316,15 @@ class Utils:
             logging.log(logging.ERROR, 'Try running this program with sudo.')
             sys.exit(1)
 
+    def prompt_sudo(self):
+        try:
+            if os.geteuid() != 0:
+                msg = "hay [sudo] password for %u: "
+                return subprocess.check_call(f"sudo -v -p '{msg}'", shell=True)
+        except Exception:
+            pass
+        return -1
+
     def get_ip_address(self):
         st = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
@@ -282,10 +344,8 @@ class Utils:
 
     def progress(self, id: int, value: int, description: str = "Processing", maxval: int = 100):
         try:
-
             # if self.ctx.progress.get(id) is None:
             #     self.ctx.progress[id] = tqdm(total=maxval, desc=description, colour="#000", leave=False)
-
             # if self.ctx.progress.get(id) is not None:
             #     bar = self.ctx.progress.get(id)
             #     bar.update(value)
@@ -299,7 +359,27 @@ class Utils:
             if value >= maxval:
                 print()
         except Exception as e:
-            logging.log(logging.CRITICAL, e)
+            logging.log(logging.CRITICAL, e, exc_info=True)
+
+    # def nmap_process(self, msg: str, host: str, options: List[str], safe_mode: bool = True) -> NmapReport:
+    #     try:
+    #         log_runBanner(msg)
+    #         logging.log(logging.NOTICE, f'nmap {" ".join(host)} {" ".join(options)}')
+    #         if not self.ctx.print_only_mode:
+    #             nmap_proc: NmapProcess = NmapProcess(targets=host, options=' '.join(options), safe_mode=safe_mode)
+    #             nmap_proc.run_background()
+    #             while nmap_proc.is_running():
+    #                 self.progress(100, float(nmap_proc.progress))
+    #                 time.sleep(0.01)
+    #             self.progress(100, 100)
+    #             if nmap_proc.stderr is not None:
+    #                 if "QUITTING" in nmap_proc.stderr:
+    #                     logging.log(logging.CRITICAL, nmap_proc.stderr)
+    #                     return None
+    #                 logging.log(logging.WARNING, nmap_proc.stderr)
+    #             return NmapParser.parse(nmap_proc.stdout)
+    #     except Exception as e:
+    #         logging.log(logging.CRITICAL, e, exc_info=True)
 
     # --------------------------------------------------------------------------
     #
@@ -328,5 +408,5 @@ class Utils:
                 options = default_options
             return options
         except Exception as e:
-            logging.log(logging.CRITICAL, e)
+            logging.log(logging.CRITICAL, e, exc_info=True)
         return []

@@ -3,9 +3,12 @@ click
 coloredlogs
 verboselogs
 string-color
+progress
 progressbar2
+# alive-progress
 
 maxminddb
 requests
 
 pyyaml
+# python-libnmap

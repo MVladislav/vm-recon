@@ -57,7 +57,7 @@ LICENSE: str = config('LICENSE', default='GNU AGPLv3')
 AUTHOR: str = config('AUTHOR', default='MVladislav')
 AUTHOR_EMAIL: str = config('AUTHOR_EMAIL', default='info@mvladislav.online')
 
-PROJECT_NAME: str = config('PROJECT_NAME', default='Project Name')
+PROJECT_NAME: str = config('PROJECT_NAME', default='vm_recon')
 ENV_MODE: str = config('ENV_MODE', default='KONS')
 VERSION: str = config('VERSION', default='0.0.1')
 
