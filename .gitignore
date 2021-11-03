@@ -1,3 +1,27 @@
+*
+!.git/
+!.git/**
+!.github/
+!.github/**
+!.vscode/
+!.vscode/**
+!app/
+!app/**
+!scripts/**
+!scripts/
+
+!.dockerignore
+!.env_template
+!.gitignore
+!CHANGELOG.md
+!Dockerfile
+!LICENCE
+!README.md
+!SECURITY.md
+!docker-compose.yaml
+!requirements.txt
+!setup.py
+
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
