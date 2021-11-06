@@ -17,7 +17,7 @@ from ..utils.utils import Context, Utils
 # from libnmap.process import NmapProcess
 
 
-SUDO = "sudo"
+SUDO = []
 
 # ------------------------------------------------------------------------------
 #
@@ -345,6 +345,7 @@ class HackService:
         if SUBFINDER_SHODAN_API_KEY is not None:
             options_script_args = ['--script-args', f'shodan-api.apikey={SUBFINDER_SHODAN_API_KEY}']
 
+        options_privileged = ['--privileged']
         options_improve_scan = [f'--min-rate={rate}', f'-T{t_scan}']
 
         options_host_scan = ['-sn', '-PE', '-n'] + options_improve_scan + mode_decoy
@@ -360,7 +361,7 @@ class HackService:
         # logging.log(logging.DEBUG, hosts)
 
         hosts = self.utils.run_command_output_loop('nmap host-up scan', [
-            [SUDO, 'nmap'] + options_host_scan + hosts,
+            SUDO + ['nmap'] + options_privileged + options_host_scan + hosts,
             ['grep', 'for'],
             ['cut', '-d', ' ', '-f5'],
             ['sort'],
@@ -387,7 +388,7 @@ class HackService:
 
                 if udp:
                     ports = self.utils.run_command_output_loop('nmap udp ports scan', [
-                        [SUDO, 'nmap'] + options_port_udp_scan + hosts,
+                        SUDO + ['nmap'] + options_privileged + options_port_udp_scan + hosts,
                         ['grep', '^[0-9]'],
                         ['cut', '-d', '/', '-f', '1'],
                         ['sort'],
@@ -397,7 +398,7 @@ class HackService:
                     ])
                 else:
                     ports = self.utils.run_command_output_loop('nmap tcp ports scan', [
-                        [SUDO, 'nmap'] + options_port_scan + hosts,
+                        SUDO + ['nmap'] + options_privileged + options_port_scan + hosts,
                         ['grep', '^[0-9]'],
                         ['cut', '-d', '/', '-f', '1'],
                         ['sort'],
@@ -415,7 +416,7 @@ class HackService:
                     file.write('\n'.join(ports))
                 # RUN full scan for information's
                 self.utils.run_command_output_loop('nmap scan', [
-                    [SUDO, 'nmap'] + options_full_scan + ['-p', ','.join(ports)] + hosts
+                    SUDO + ['nmap'] + options_privileged + options_full_scan + ['-p', ','.join(ports)] + hosts
                 ])
                 # nmap_report = self.utils.nmap_process('nmap scan', hosts, options_full_scan+['-p', ','.join(ports)], safe_mode=False)
 
