@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - start changelog
+- update nmap usage
+- improve/refactor code
+- add alpha shell script to install dependencies
 
 ### Changed
 
