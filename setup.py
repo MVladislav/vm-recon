@@ -101,7 +101,7 @@ setup(
     # package_dir={"": "app"},
     # packages=find_packages(where="app"),
     packages=find_packages(),
-    data_files=[('', ['requirements.txt', 'scripts/setup.sh', 'scripts/setup-dev.sh'])],
+    data_files=[('', ['requirements.txt', 'scripts/setup.sh', 'scripts/setup-dev.sh', 'scripts/vm_recon_path.sh'])],
     include_package_data=True,
     cmdclass={
         'develop': PostDevelopCommand,
