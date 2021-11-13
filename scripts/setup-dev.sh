@@ -59,6 +59,45 @@ export PREFIX="$HOME/.local"
 # esac
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# cd into folder and clone + cd into cloned
+clone_or_pull_and_cd() {
+  local git_link=$1
+  repo_name=$(basename "$git_link" .git)
+  echo ''
+  echo "inst:: git:: $repo_name"
+  cd "$vm_path_git"
+
+  git clone "$git_link" 2>/dev/null || (
+    cd "$repo_name"
+    git pull
+  )
+  cd "$repo_name"
+}
+
+# curl_and_cd() {
+#   local curl_link=$1
+#   local repo_name=42
+#   echo ''
+#   echo "inst:: curl:: $repo_name"
+#   cd "$vm_path_git"
+#   mkdir -p "$repo_name"
+#   cd "$repo_name"
+#   curl "$curl_link" >"$repo_name"
+# }
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# check if command always installed like 'which'
+check_if_command_installed() {
+  if ! command -v "$1" &>/dev/null; then
+    echo 1
+  else
+    echo "--> inst:: ...:: $1 is always installed"
+  fi
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo ''
 echo 'init:: create base folder struct'
 vm_path=$HOME/.vm_recon
@@ -77,6 +116,7 @@ echo "init:: venv"
 python3 -m venv "$vm_path/venv"
 source "$vm_path/venv/bin/activate"
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo ''
 echo 'inst:: dependencies...'
 
@@ -94,6 +134,30 @@ echo 'inst:: apt:: services'
 # #   whois \
 # #   xsltproc \
 # #   dnsutils # dig | host
+# #   libsqlite3-dev
+# #   apache2 \
+# #   powerline \
+# #   fonts-powerline \
+# #   dirb \
+# #   hydra \
+# #   dnsrecon \
+# #   geoip-bin \
+# #   cewl \
+# #   hping3 \
+# #   nikto \
+# #   figlet \
+# #   snmp \
+# #   snmp-mibs-downloader \
+# #   patchelf \
+# #   redis-server \
+# #   chromium-browser \
+# #   smbclient \
+# #   smbmap \
+# #   awscli \
+# #   shellcheck \
+# #   yamllint \
+# #   mingw-w64 \
+# #   libimage-exiftool-powerline
 
 # get source git by call 'apt-get download <PKG>'
 cmds_to_install=(
@@ -127,7 +191,9 @@ export DESTDIR="$HOME/.local"
 for cmd_to_install in "${cmds_to_install[@]}"; do
   IFS=' ' read -r -a cmd_install <<<"$cmd_to_install"
   cloned_repo=$(basename "${cmd_install[0]}" .git)
-  if ! command -v "${cmd_install[1]}" &>/dev/null; then
+  is_installed=$(check_if_command_installed "${cmd_install[1]}")
+  echo "$is_installed"
+  if [[ "$is_installed" == "1" ]]; then
     cd "$vm_path_source"
     echo "--> inst:: ...:: ${cmd_install[0]}"
     git clone "${cmd_install[0]}"
@@ -145,39 +211,10 @@ for cmd_to_install in "${cmds_to_install[@]}"; do
     #   make
     #   make install
     # fi
-  else
-    echo "--> inst:: ...:: ${cmd_install[1]} is always installed"
   fi
 done
 
-# # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# # echo ''
-# # echo 'inst:: apt:: services'
-# # sudo apt update
-# # sudo apt install \
-# #   apache2 \
-# #   powerline \
-# #   fonts-powerline \
-# #   dirb \
-# #   hydra \
-# #   dnsrecon \
-# #   geoip-bin \
-# #   cewl \
-# #   hping3 \
-# #   nikto \
-# #   figlet \
-# #   snmp \
-# #   snmp-mibs-downloader \
-# #   patchelf \
-# #   redis-server \
-# #   chromium-browser \
-# #   smbclient \
-# #   smbmap \
-# #   awscli \
-# #   shellcheck \
-# #   yamllint \
-# #   mingw-w64 \
-# #   libimage-exiftool-powerline
+export DESTDIR=""
 
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # #  snap:
@@ -188,6 +225,7 @@ done
 echo ''
 echo 'inst:: pip3:: services'
 pips_to_install=(
+  pip
   sqlmap
   wfuzz
   pyyaml
@@ -214,7 +252,7 @@ pips_to_install=(
   emailfinder
 )
 for pip_to_install in "${pips_to_install[@]}"; do
-  echo "--> inst:: ...:: ${pip_to_install}"
+  echo "--> inst:: pip3:: ${pip_to_install}"
   pip3 install "$pip_to_install"
 done
 
@@ -234,7 +272,7 @@ gems_to_install=(
   evil-winrm
 )
 for gem_to_install in "${gems_to_install[@]}"; do
-  echo "--> inst:: ...:: ${gem_to_install}"
+  echo "--> inst:: gem:: ${gem_to_install}"
   gem install "$gem_to_install"
 done
 
@@ -250,7 +288,7 @@ gos_to_install=(
   github.com/OJ/gobuster/v3
 )
 for go_to_install in "${gos_to_install[@]}"; do
-  echo "--> inst:: ...:: ${go_to_install}"
+  echo "--> inst:: go:: ${go_to_install}"
   go install "${go_to_install}@latest"
 done
 
@@ -259,30 +297,25 @@ echo ''
 echo 'inst:: npm:: services'
 npms_to_install=(asar)
 for npm_to_install in "${npms_to_install[@]}"; do
-  echo "--> inst:: ...:: ${npm_to_install}"
+  echo "--> inst:: npm:: ${npm_to_install}"
   npm install -g "$npm_to_install"
 done
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-clone_or_pull_and_cd() {
-  git_link=$1
-  repo_name=$(basename "$git_link" .git)
-  echo ''
-  echo "inst:: git:: $repo_name"
-  cd "$vm_path_git"
-
-  git clone "$git_link" 2>/dev/null || (
-    cd "$repo_name"
-    git pull
-  )
-  cd "$repo_name"
-}
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "git@github.com:nmap/nmap.git"
 ./configure --prefix "$vm_prefix"
 make
 make install
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/openwall/john.git"
+cd src/
+./configure --prefix "$vm_prefix"
+make
+make install
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/danielmiessler/SecLists.git"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "git@github.com:mrschyte/nmap-converter.git"
@@ -302,6 +335,14 @@ clone_or_pull_and_cd "https://github.com/CiscoCXSecurity/enum4linux.git"
 ln -sf "$PWD/enum4linux.pl" "$vm_run/enum4linux"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "git@github.com:offensive-security/exploitdb.git"
+ln -sf "$PWD/searchsploit" "$vm_run/searchsploit"
+sed -i "s|\"/opt/exploitdb\"|\"${PWD}\"|g" "$PWD/.searchsploit_rc"
+sed -i "s|\"/opt/exploitdb-papers\"|\"${PWD}/../exploitdb-papers\"|g" "$PWD/.searchsploit_rc"
+cp "$PWD/.searchsploit_rc" "$HOME"
+./searchsploit -u
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/assetnote/kiterunner.git"
 make
 cd dist
@@ -318,11 +359,45 @@ ln -sf "$PWD/kr" "$vm_run/kr"
 # clone_or_pull_and_cd "https://github.com/enablesecurity/wafw00f.git"
 # pip3 install .
 
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# clone_or_pull_and_cd "https://github.com/andresriancho/w3af.git"
+# ./w3af_console
+# . /tmp/w3af_dependency_install.sh
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/urbanadventurer/WhatWeb.git"
 bundle update
 bundle install
 ln -sf "$PWD/whatweb" "$vm_run/whatweb"
+
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# curl https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && \
+#   chmod 755 msfinstall && \
+#   ./msfinstall
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# # sudo apt install libsqlite3-dev
+# clone_or_pull_and_cd "git@github.com:rapid7/metasploit-framework.git"
+# export BUNDLER_CONFIG_ARGS="set clean 'true' set no-cache 'true' set system 'true' set without 'development test coverage'"
+# bundle config $BUNDLER_ARGS
+# bundle update
+# bundle install --jobs=8
+#
+# msfbinscan
+# msfconsole
+# msfd
+# msfdb
+# msfelfscan
+# msfmachscan
+# msfpescan
+# msfrop
+# msfrpc
+# msfrpcd
+# msfupdate
+# msfvenom
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+chmod 750 "$vm_path" -R 2>/dev/null
+chmod 750 "$vm_prefix" -R 2>/dev/null
 
 echo ''
 echo '#########################################################################'

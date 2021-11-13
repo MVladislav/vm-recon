@@ -209,6 +209,20 @@ make
 make install
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/openwall/john.git"
+cd src/
+./configure --prefix "$vm_prefix"
+sudo make -s clean
+make -sj4
+make install
+mkdir -p "$vm_prefix/share/john"
+cp "$vm_path/git/john/run/*.conf" "$vm_prefix/share/john/"
+cp "$vm_path/git/john/run/*.lst" "$vm_prefix/share/john/"
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/danielmiessler/SecLists.git"
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "git@github.com:mrschyte/nmap-converter.git"
 ln -sf "$PWD/nmap-converter.py" "$vm_run/nmap-converter"
 
@@ -219,6 +233,10 @@ ln -sf "$PWD/checksec" "$vm_run/checksec"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/CiscoCXSecurity/enum4linux.git"
 ln -sf "$PWD/enum4linux.pl" "$vm_run/enum4linux"
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "git@github.com:offensive-security/exploitdb.git"
+ln -sf "$PWD/searchsploit" "$vm_run/searchsploit"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/assetnote/kiterunner.git"
