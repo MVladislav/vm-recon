@@ -38,6 +38,7 @@ class Context:
         logging.log(logging.DEBUG, 'init context...')
         self.project = PROJECT_NAME
         self.base_path = BASE_PATH
+        self.home_path = Path.home()
 
         self.utils: Utils = None
 
@@ -352,7 +353,8 @@ class Utils:
 
             if self.ctx.progress.get(id) is None:
                 self.ctx.progress[id] = ProgressBar(
-                    widgets=[description, ' [', Timer(), '] ', Bar(marker='O'), ' [', Counter(format='%(value)02d/%(max_value)d'), ']', ' (', ETA(), ') '],
+                    widgets=[description, ' [', Timer(), '] ', Bar(marker='O'), ' [', Counter(
+                        format='%(value)02d/%(max_value)d'), ']', ' (', ETA(), ') '],
                     maxval=maxval).start()
             bar: ProgressBar = self.ctx.progress.get(id)
             bar.update(value=value)

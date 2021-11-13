@@ -348,8 +348,10 @@ class HackService:
         options_privileged = ['--privileged']
         options_improve_scan = [f'--min-rate={rate}', f'-T{t_scan}']
 
+        # nmap --privileged -sn -PE -n
         options_host_scan = ['-sn', '-PE', '-n'] + options_improve_scan + mode_decoy
 
+        # nmap --privileged -Pn -n --disable-arp-ping -p-
         options_port_scan = ['-Pn', '-n', '--disable-arp-ping'] + options_improve_scan + mode_decoy + port_range_scan
         options_port_udp_scan = options_port_scan + ['-sU', '-sT', '--max-retries=1']
 
@@ -484,48 +486,48 @@ class HackService:
         log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/gobuster', host)
 
-        # wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
-        wordlist = '/opt/git/SecLists/Discovery/Web-Content/raft-medium-words.txt' if w_list is None else w_list
+        # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
+        wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/raft-medium-words.txt' if w_list is None else w_list
 
         if exclude_length is not None:
             options + ['--exclude-length', exclude_length]
 
         if type == 'dir' or type is None:
-            wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
+            wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
             self.utils.run_command_output_loop('gobuster dir', [
                 ['gobuster', 'dir', '-u', host, '-w', wordlist, '-r', '-t',
                     str(threads), '-o', f'{path}/gobuster_dir'] + options,
                 ['tee', f'{path}/gobuster_dir.log']
             ])
         elif type == 'vhost':
-            wordlist = '/opt/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list is None else w_list
+            wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list is None else w_list
             self.utils.run_command_output_loop('gobuster vhost', [
                 ['gobuster', 'vhost', '-u', host, '-w', wordlist, '-r', '-t',
                     str(threads), '-o', f'{path}/gobuster_vhost'] + options,
                 ['tee', f'{path}/gobuster_vhost.log']
             ])
         elif type == 'fuzz':
-            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
-            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/Apache.fuzz.txt' if w_list is None else w_list
-            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/ApacheTomcat.fuzz.txt' if w_list is None else w_list
-            wordlist = '/opt/git/SecLists/Discovery/Web-Content/FatwireCMS.fuzz.txt' if w_list is None else w_list
-            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/CMS/wordpress.fuzz.txt' if w_list is None else w_list
-            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/CMS/wp-plugins.fuzz.txt' if w_list is None else w_list
-            # wordlist = '/opt/git/SecLists/Discovery/Web-Content/CMS/wp-themes.fuzz.txt' if w_list is None else w_list
+            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
+            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/Apache.fuzz.txt' if w_list is None else w_list
+            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/ApacheTomcat.fuzz.txt' if w_list is None else w_list
+            wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/FatwireCMS.fuzz.txt' if w_list is None else w_list
+            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/CMS/wordpress.fuzz.txt' if w_list is None else w_list
+            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/CMS/wp-plugins.fuzz.txt' if w_list is None else w_list
+            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/CMS/wp-themes.fuzz.txt' if w_list is None else w_list
             self.utils.run_command_output_loop('gobuster fuzz', [
                 ['gobuster', 'fuzz', '-u', host, '-w', wordlist, '-r', '-t',
                     str(threads), '-o', f'{path}/gobuster_fuzz'] + options,
                 ['tee', f'{path}/gobuster_fuzz.log']
             ])
         elif type == 'dns':
-            wordlist = '/opt/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list is None else w_list
+            wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list is None else w_list
             self.utils.run_command_output_loop('gobuster dns', [
                 ['gobuster', 'dns', '-d', host, '-w', wordlist, '-r', '-t',
                     str(threads), '-o', f'{path}/gobuster_dns'] + options,
                 ['tee', f'{path}/gobuster_dns.log']
             ])
         elif type == 'bak':
-            wordlist = '/opt/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
+            wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
             self.utils.run_command_output_loop('gobuster bak', [
                 ['gobuster', 'dir', '-u', host, '-w', wordlist, '-d', '-r',
                     '-t', str(threads), '-o', f'{path}/gobuster_back'] + options,
@@ -556,6 +558,54 @@ class HackService:
 
         logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
+    def sqlmap(self,
+               host: str, data: str = None, cookie: str = None, method: str = 'POST', technique: str = 'U',
+               dbms: str = None, dbs=False, tables=False,
+               database_name: str = None, tables_name: str = None,
+               random_agent=True, banner=True, parse_errors=True, dump=True, tamper: str = None,
+               level: int = 5, risk: int = 3, threads: int = 10, verbose: int = 3) -> None:
+        '''
+            tamper:
+                - between
+                - charunicodeescape
+            technique:
+                - B: Boolean-based blind
+                - E: Error-based
+                - U: Union query-based
+                - S: Stacked queries
+                - T: Time-based blind
+                - Q: Inline queries
+        '''
+        service_name = 'SQLMAP'
+        log_runBanner(service_name)
+        path = self.utils.create_service_folder(f'scan/sqlmap', host)
+
+        database_name = ['-D', database_name] if database_name else []
+        tables_name = ['-T', tables_name] if tables_name else []
+
+        data = f'--data={data}' if data else ''
+        cookie = f'--cookie={cookie}' if cookie else ''
+        method = f'--method={method}' if method else ''
+        technique = f'--technique={technique}' if technique else ''
+        dbms = f'--dbms={dbms}' if dbms else ''
+        dbs = '--dbs' if dbs else ''
+        tables = '--tables' if tables else ''
+
+        random_agent = '--random-agent' if random_agent else ''
+        banner = '--banner' if banner else ''
+        parse_errors = '--parse-errors' if parse_errors else ''
+        dump = f'--dump' if dump else ''
+        tamper = f'--tamper={tamper}' if tamper else ''
+
+        self.utils.run_command_output_loop('sqlmap', [
+            ['sqlmap', '-u', host, random_agent, banner, parse_errors, tamper,
+                f'--level={level}', f'--risk={risk}', f'--threads={threads}', '-v', str(verbose),
+             data, cookie, method, technique, dbms, dbs, tables, dump] + database_name+tables_name,
+            ['tee', f'{path}/sqlmap.log']
+        ])
+
+        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
+
     # --------------------------------------------------------------------------
     #
     #
@@ -582,7 +632,7 @@ class HackService:
 
                 print('')
                 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-                logging.log(logging.NOTICE, f'use "smbclient //{host}/..." to check the results')
+                logging.log(logging.NOTICE, f'use "smbclient -U anonymous //{host}/..." to check the results')
                 logging.log(logging.NOTICE, 'usefull commands "dir,get,put,..."')
                 logging.log(logging.NOTICE, f'usefull commands "smbget -R smb://{host}/..."')
                 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')

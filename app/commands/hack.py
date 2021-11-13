@@ -145,13 +145,13 @@ def gobuster(ctx: Context, host, mode, threads, wordlist, options, options_appen
         HINT:\n
             - FUZZ: write host with "FUZZ" in it\n
             - WORDLIST:\n
-                - /opt/git/SecLists/Discovery/Web-Content/raft-medium-words.txt\n
-                - /opt/git/SecLists/Discovery/Web-Content/big.txt\n
-                - /opt/git/SecLists/Discovery/Web-Content/Apache.fuzz.txt\n
-                - /opt/git/SecLists/Discovery/Web-Content/big.txt\n
-                - /opt/git/SecLists/Fuzzing/LFI/LFI-gracefulsecurity-linux.txt\n
-                - /opt/git/SecLists/Fuzzing/LFI/LFI-Jhaddix.txt\n
-                - /opt/git/SecLists/Fuzzing/big-list-of-naughty-strings.txt\n
+                - ~/.vm_recon/git/SecLists/Discovery/Web-Content/raft-medium-words.txt\n
+                - ~/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt\n
+                - ~/.vm_recon/git/SecLists/Discovery/Web-Content/Apache.fuzz.txt\n
+                - ~/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt\n
+                - ~/.vm_recon/git/SecLists/Fuzzing/LFI/LFI-gracefulsecurity-linux.txt\n
+                - ~/.vm_recon/git/SecLists/Fuzzing/LFI/LFI-Jhaddix.txt\n
+                - ~/.vm_recon/git/SecLists/Fuzzing/big-list-of-naughty-strings.txt\n
             - Try also with:\n
                 - "-x;php,txt,html,js,log,bak"\n
                 - "-f"\n
@@ -189,6 +189,52 @@ def kitrunner(ctx: Context, host, wordlist):
     hack: HackService = ctx.hack
     try:
         hack.kitrunner(host=host, w_list=wordlist)
+    except KeyboardInterrupt as k:
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
+        sys.exit(5)
+    except Exception as e:
+        logging.log(logging.CRITICAL, e, exc_info=True)
+        sys.exit(2)
+
+
+@cli.command()
+@click.option('-d', '--host', type=str, help='host to scan for', required=True)
+@click.option('-m', '--method', type=str, help='method', required=True, default='POST')
+@click.option('-dt', '--data', type=str, help='data to send', required=False, default=None)
+@click.option('-c', '--cookie', type=str, help='cookie to send', required=False, default=None)
+@click.option('-db', '--dbms', type=str, help='which dbms', required=False, default=None)
+@click.option('-dbs', '--scan-databases', type=str, help='scan databases', required=True)
+@click.option('-t', '--scan-tables', type=str, help='scan tables', required=True)
+@pass_context
+def sqlmap(ctx: Context, host, method, data, dbms, scan_databases, scan_tables):
+    '''
+        SQLMAP scan
+        HINT:
+            - after scan sqlmap saves tmp file, to start new fresh scan remove it
+            -
+    '''
+    hack: HackService = ctx.hack
+    try:
+        technique = 'U'
+        database_name = None
+        tables_name = None
+        tamper = None
+        level = 5
+        risk = 3
+        threads = 10
+        verbose = 3
+
+        random_agent = True
+        banner = True
+        parse_errors = True
+        dump = True
+
+        hack.sqlmap(
+            host=host, data=data, cookie=cookie, method=method, technique=technique,
+            dbms=dbms, dbs=scan_databases, tables=scan_tables,
+            database_name=database_name, tables_name=tables_name,
+            random_agent=random_agent, banner=banner, parse_errors=parse_errors, dump=dump, tamper=tamper,
+            level=level, risk=risk, threads=threads, verbose=verbose)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
