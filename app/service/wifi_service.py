@@ -4,6 +4,8 @@
 
 import logging
 import re
+import sys
+from typing import List, Union
 
 from ..utils.utils import Context, Utils
 
@@ -27,9 +29,16 @@ class WiFiService:
     # --------------------------------------------------------------------------
 
     def __init__(self, ctx: Context):
-        self.ctx: Context = ctx
-        self.utils: Utils = self.ctx.utils
-        logging.log(logging.DEBUG, 'wifi-service is initiated')
+        '''
+            wifi service
+        '''
+        if ctx is not None and ctx.utils is not None:
+            self.ctx: Context = ctx
+            self.utils: Utils = ctx.utils
+            logging.log(logging.DEBUG, 'wifi-service is initiated')
+        else:
+            logging.log(logging.ERROR, 'context or utils are not set')
+            sys.exit(1)
 
     # --------------------------------------------------------------------------
     #
@@ -37,14 +46,16 @@ class WiFiService:
     #
     # --------------------------------------------------------------------------
 
-    def find_nic(self):
+    def find_nic(self) -> Union[List[str], None]:
         '''
             This function is used to find the network interface controllers on your computer.
         '''
         # We use the subprocess.run to run the 'sudo iw dev' command we'd normally run to find the network interfaces.
         result = self.utils.run_command_output_loop('find nic', [['iw', 'dev']])
-        network_interface_controllers = self.wlan_code.findall(result)
-        return network_interface_controllers
+        if result is not None:
+            network_interface_controllers = self.wlan_code.findall(result)
+            return network_interface_controllers
+        return None
 
     def set_monitor_mode(self, wifi_name):
         '''

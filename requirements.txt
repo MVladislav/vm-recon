@@ -5,10 +5,10 @@ verboselogs
 string-color
 progress
 progressbar
-# alive-progress
 
 maxminddb
 requests
+types-requests
 
 pyyaml
 # python-libnmap

@@ -49,6 +49,34 @@ echo '--> setup:: path:: make'
 export PREFIX="$HOME/.local"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# cd into folder and clone + cd into cloned
+clone_or_pull_and_cd() {
+  local git_link=$1
+  repo_name=$(basename "$git_link" .git)
+  echo ''
+  echo "inst:: git:: $repo_name"
+  cd "$vm_path_git"
+
+  git clone "$git_link" 2>/dev/null || (
+    cd "$repo_name"
+    git pull
+  )
+  cd "$repo_name"
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# check if command always installed like 'which'
+check_if_command_installed() {
+  if ! command -v "$1" &>/dev/null; then
+    echo 1
+  else
+    echo "--> inst:: ...:: $1 is always installed"
+  fi
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo ''
 echo 'init:: create base folder struct'
 vm_path=$HOME/.vm_recon
@@ -62,6 +90,7 @@ mkdir -p "$vm_path_source"
 mkdir -p "$vm_prefix"
 mkdir -p "$vm_run"
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo ''
 echo 'inst:: dependencies...'
 
@@ -85,7 +114,9 @@ export DESTDIR="$HOME/.local"
 for cmd_to_install in "${cmds_to_install[@]}"; do
   IFS=' ' read -r -a cmd_install <<<"$cmd_to_install"
   cloned_repo=$(basename "${cmd_install[0]}" .git)
-  if ! command -v "${cmd_install[1]}" &>/dev/null; then
+  is_installed=$(check_if_command_installed "${cmd_install[1]}")
+  echo "$is_installed"
+  if [[ "$is_installed" == "1" ]]; then
     cd "$vm_path_source"
     echo "--> inst:: ...:: ${cmd_install[0]}"
     git clone "${cmd_install[0]}"
@@ -103,15 +134,16 @@ for cmd_to_install in "${cmds_to_install[@]}"; do
     #   make
     #   make install
     # fi
-  else
-    echo "--> inst:: ...:: ${cmd_install[1]} is always installed"
   fi
 done
+
+export DESTDIR=""
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo ''
 echo 'inst:: pip3:: services'
 pips_to_install=(
+  pip
   sqlmap
   wfuzz
   pyyaml
@@ -138,7 +170,7 @@ pips_to_install=(
   emailfinder
 )
 for pip_to_install in "${pips_to_install[@]}"; do
-  echo "--> inst:: ...:: ${pip_to_install}"
+  echo "--> inst:: pip3:: ${pip_to_install}"
   pip3 install "$pip_to_install"
 done
 
@@ -158,7 +190,7 @@ gems_to_install=(
   evil-winrm
 )
 for gem_to_install in "${gems_to_install[@]}"; do
-  echo "--> inst:: ...:: ${gem_to_install}"
+  echo "--> inst:: gem:: ${gem_to_install}"
   gem install "$gem_to_install"
 done
 
@@ -174,7 +206,7 @@ gos_to_install=(
   github.com/OJ/gobuster/v3
 )
 for go_to_install in "${gos_to_install[@]}"; do
-  echo "--> inst:: ...:: ${go_to_install}"
+  echo "--> inst:: go:: ${go_to_install}"
   go install "${go_to_install}@latest"
 done
 
@@ -183,25 +215,11 @@ echo ''
 echo 'inst:: npm:: services'
 npms_to_install=(asar)
 for npm_to_install in "${npms_to_install[@]}"; do
-  echo "--> inst:: ...:: ${npm_to_install}"
+  echo "--> inst:: npm:: ${npm_to_install}"
   npm install -g "$npm_to_install"
 done
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-clone_or_pull_and_cd() {
-  git_link=$1
-  repo_name=$(basename "$git_link" .git)
-  echo ''
-  echo "inst:: git:: $repo_name"
-  cd "$vm_path_git"
-
-  git clone "$git_link" 2>/dev/null || (
-    cd "$repo_name"
-    git pull
-  )
-  cd "$repo_name"
-}
-
+# make
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "git@github.com:nmap/nmap.git"
 ./configure --prefix "$vm_prefix"
@@ -212,20 +230,23 @@ make install
 clone_or_pull_and_cd "https://github.com/openwall/john.git"
 cd src/
 ./configure --prefix "$vm_prefix"
-sudo make -s clean
-make -sj4
+make
 make install
-mkdir -p "$vm_prefix/share/john"
-cp "$vm_path/git/john/run/*.conf" "$vm_prefix/share/john/"
-cp "$vm_path/git/john/run/*.lst" "$vm_prefix/share/john/"
 
+# info files
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/danielmiessler/SecLists.git"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-clone_or_pull_and_cd "git@github.com:mrschyte/nmap-converter.git"
+clone_or_pull_and_cd "https://github.com/honze-net/nmap-bootstrap-xsl.git"
+
+# py
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/mrschyte/nmap-converter.git"
+pip3 install -r requirements.txt
 ln -sf "$PWD/nmap-converter.py" "$vm_run/nmap-converter"
 
+# other
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/slimm609/checksec.sh.git"
 ln -sf "$PWD/checksec" "$vm_run/checksec"
@@ -237,6 +258,10 @@ ln -sf "$PWD/enum4linux.pl" "$vm_run/enum4linux"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "git@github.com:offensive-security/exploitdb.git"
 ln -sf "$PWD/searchsploit" "$vm_run/searchsploit"
+sed -i "s|\"/opt/exploitdb\"|\"${PWD}\"|g" "$PWD/.searchsploit_rc"
+sed -i "s|\"/opt/exploitdb-papers\"|\"${PWD}/../exploitdb-papers\"|g" "$PWD/.searchsploit_rc"
+cp "$PWD/.searchsploit_rc" "$HOME"
+./searchsploit -u
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/assetnote/kiterunner.git"
@@ -252,6 +277,10 @@ clone_or_pull_and_cd "https://github.com/urbanadventurer/WhatWeb.git"
 bundle update
 bundle install
 ln -sf "$PWD/whatweb" "$vm_run/whatweb"
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+chmod 750 "$vm_path" -R 2>/dev/null
+chmod 750 "$vm_prefix" -R 2>/dev/null
 
 echo ''
 echo '#########################################################################'

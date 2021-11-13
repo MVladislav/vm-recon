@@ -1,8 +1,8 @@
 import logging
 import os
+import sys
 from pathlib import Path
-from time import sleep
-from typing import Generator, List, Tuple
+from typing import Any, List, Union
 
 import yaml
 
@@ -17,7 +17,8 @@ from ..utils.utils import Context, Utils
 # from libnmap.process import NmapProcess
 
 
-SUDO = []
+SUDO: List[str] = []
+default_split_by: str = ','
 
 # ------------------------------------------------------------------------------
 #
@@ -30,11 +31,15 @@ class HackService:
 
     def __init__(self, ctx: Context):
         '''
-            ...
+            hack service
         '''
-        self.ctx: Context = ctx
-        self.utils: Utils = self.ctx.utils
-        logging.log(logging.DEBUG, 'hack-service is initiated')
+        if ctx is not None and ctx.utils is not None:
+            self.ctx: Context = ctx
+            self.utils: Utils = ctx.utils
+            logging.log(logging.DEBUG, 'hack-service is initiated')
+        else:
+            logging.log(logging.ERROR, 'context or utils are not set')
+            sys.exit(1)
 
     # --------------------------------------------------------------------------
     #
@@ -316,8 +321,9 @@ class HackService:
     #
     # --------------------------------------------------------------------------
 
-    def nmap(self, host: str, udp: bool = True, ports=None,
-             options: list = [], rate: int = 10000, path: str = None, silent: bool = False) -> None:
+    def nmap(self, host: str, udp: bool = True, port: Union[str, None] = None,
+             options: List[Any] = [], rate: int = 10000,
+             path: Union[str, None] = None, silent: bool = False) -> None:
         '''
             ...
         '''
@@ -325,11 +331,12 @@ class HackService:
         log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/nmap', host) if path is None else path
 
-        hosts = host.split(' ')
-        if ports is not None:
-            ports = ports.split(';')
+        hosts: Union[str, List[str], None] = host.split(' ')
+        ports: Union[str, List[str], None] = None  # port
 
         port_range_scan = ['-p-']  # '-p-' | '-F-' | '--top-ports=1000'
+        if port is not None:
+            port_range_scan = ['-p', port]
         mode_decoy = []
         t_scan = 4
         if silent:
@@ -348,8 +355,8 @@ class HackService:
         options_privileged = ['--privileged']
         options_improve_scan = [f'--min-rate={rate}', f'-T{t_scan}']
 
-        # nmap --privileged -sn -PE -n
-        options_host_scan = ['-sn', '-PE', '-n'] + options_improve_scan + mode_decoy
+        # nmap --privileged  -Pn -n -sn -PE
+        options_host_scan = ['-Pn', '-n', '-sn', '-PE'] + options_improve_scan + mode_decoy
 
         # nmap --privileged -Pn -n --disable-arp-ping -p-
         options_port_scan = ['-Pn', '-n', '--disable-arp-ping'] + options_improve_scan + mode_decoy + port_range_scan
@@ -362,15 +369,19 @@ class HackService:
         # hosts = [host.address for host in nmap_report_hosts.hosts if host.is_up()]
         # logging.log(logging.DEBUG, hosts)
 
-        hosts = self.utils.run_command_output_loop('nmap host-up scan', [
-            SUDO + ['nmap'] + options_privileged + options_host_scan + hosts,
-            ['grep', 'for'],
-            ['cut', '-d', ' ', '-f5'],
-            ['sort'],
-            ['uniq'],
-            ['tr', '\\n', ' '],
-            ['sed', 's/ $//'],
-        ])
+        if isinstance(hosts, List):
+            hosts = self.utils.run_command_output_loop('nmap host-up scan', [
+                SUDO + ['nmap'] + options_privileged + options_host_scan + hosts,
+                ['grep', 'for'],
+                ['cut', '-d', ' ', '-f5'],
+                ['sort'],
+                ['uniq'],
+                ['tr', '\\n', ' '],
+                ['sed', 's/ $//'],
+            ])
+        else:
+            logging.log(logging.WARNING, 'host str was not parsed correct to list, check your typed host')
+            hosts = None
 
         if hosts is not None:
             hosts = hosts.split(' ')
@@ -395,8 +406,8 @@ class HackService:
                         ['cut', '-d', '/', '-f', '1'],
                         ['sort'],
                         ['uniq'],
-                        ['tr', '\\n', ','],
-                        ['sed', 's/,$//'],
+                        ['tr', '\\n', default_split_by],
+                        ['sed', f's/{default_split_by}$//'],
                     ])
                 else:
                     ports = self.utils.run_command_output_loop('nmap tcp ports scan', [
@@ -405,14 +416,14 @@ class HackService:
                         ['cut', '-d', '/', '-f', '1'],
                         ['sort'],
                         ['uniq'],
-                        ['tr', '\\n', ','],
-                        ['sed', 's/,$//'],
+                        ['tr', '\\n', default_split_by],
+                        ['sed', f's/{default_split_by}$//'],
                     ])
 
             # --initial-rtt-timeout 50ms --max-rtt-timeout 100ms
             # nmap -T1 --min-rate=100 -O -n -sn -Pn -sA
-            if ports is not None:
-                ports = ports.split(',')
+            if isinstance(ports, str):
+                ports = ports.split(default_split_by)
                 # SAVE ports to file
                 with open(f'{path}/ports.lst', 'w') as file:
                     file.write('\n'.join(ports))
@@ -424,7 +435,7 @@ class HackService:
 
                 if os.path.isfile(f'{path}/inital.xml'):
                     self.utils.run_command_output_loop('nmap convert xls', [
-                        ['nmap-converter.py', f'{path}/inital.xml', '-o', f'{path}/inital.xls'],
+                        ['nmap-converter', f'{path}/inital.xml', '-o', f'{path}/inital.xls'],
                         ['tee', f'{path}/nmap.log']
                     ])
                     self.utils.run_command_output_loop('nmap convert html', [
@@ -439,7 +450,7 @@ class HackService:
         else:
             logging.log(logging.WARNING, '[-] No host are reachable')
 
-    def masscan(self, host: str, rate: int = 10000, options: list = []) -> None:
+    def masscan(self, host: str, rate: int = 10000, options: List[str] = []) -> None:
         '''
             ...
         '''
@@ -448,7 +459,7 @@ class HackService:
         path = self.utils.create_service_folder(f'scan/masscan', host)
 
         self.utils.run_command_output_loop('masscan', [
-            [SUDO, 'masscan', host, '-oX', f'{path}/masscan.xml'] + options
+            SUDO + ['masscan', host, '-oX', f'{path}/masscan.xml'] + options
         ])
         self.utils.run_command_output_loop('xsltproc', [
             ['xsltproc', '-o', f'{path}/final-masscan.html',
@@ -467,7 +478,7 @@ class HackService:
             t_scan = 4
             logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
             n_options = ['-sV', '-O', f'-T{t_scan}', '-PE', '-Pn', '-n', '--open', '-vv']
-            self.nmap(host=host, ports=ports, options=n_options, path=path)
+            self.nmap(host=host, port=ports, options=n_options, path=path, rate=rate)
         else:
             logging.log(logging.WARNING, '[-] No ports found')
 
@@ -478,7 +489,8 @@ class HackService:
     # ffuf -w ./folders.txt:FOLDERS,./wordlist.txt:WORDLIST,./extensions.txt:EXTENSIONS -u http://192.168.10.10/FOLDERS/WORDLISTEXTENSIONS
 
     def gobuster(self, host: str, type: str = 'dir', threads: int = 10,
-                 w_list: str = None, options: list = [], exclude_length: int = None) -> None:
+                 w_list: Union[str, None] = None,
+                 options: List[str] = [], exclude_length: Union[int, None] = None) -> None:
         '''
             ...
         '''
@@ -490,7 +502,7 @@ class HackService:
         wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/raft-medium-words.txt' if w_list is None else w_list
 
         if exclude_length is not None:
-            options + ['--exclude-length', exclude_length]
+            options + ['--exclude-length', str(exclude_length)]
 
         if type == 'dir' or type is None:
             wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
@@ -538,7 +550,7 @@ class HackService:
 
         logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
-    def kitrunner(self, host: str,  w_list: str = None) -> None:
+    def kitrunner(self, host: str,  w_list: Union[str, None] = None) -> None:
         '''
             ...
         '''
@@ -559,10 +571,11 @@ class HackService:
         logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
 
     def sqlmap(self,
-               host: str, data: str = None, cookie: str = None, method: str = 'POST', technique: str = 'U',
-               dbms: str = None, dbs=False, tables=False,
-               database_name: str = None, tables_name: str = None,
-               random_agent=True, banner=True, parse_errors=True, dump=True, tamper: str = None,
+               host: str, data: Union[str, None] = None,
+               cookie: Union[str, None] = None, method: str = 'POST', technique: str = 'U',
+               dbms: Union[str, None] = None, dbs=False, tables=False,
+               database_name: Union[str, None] = None, tables_name: Union[str, None] = None,
+               random_agent=True, banner=True, parse_errors=True, dump=True, tamper: Union[str, None] = None,
                level: int = 5, risk: int = 3, threads: int = 10, verbose: int = 3) -> None:
         '''
             tamper:
@@ -580,8 +593,8 @@ class HackService:
         log_runBanner(service_name)
         path = self.utils.create_service_folder(f'scan/sqlmap', host)
 
-        database_name = ['-D', database_name] if database_name else []
-        tables_name = ['-T', tables_name] if tables_name else []
+        database_name_l = ['-D', database_name] if database_name else []
+        tables_name_l = ['-T', tables_name] if tables_name else []
 
         data = f'--data={data}' if data else ''
         cookie = f'--cookie={cookie}' if cookie else ''
@@ -600,7 +613,7 @@ class HackService:
         self.utils.run_command_output_loop('sqlmap', [
             ['sqlmap', '-u', host, random_agent, banner, parse_errors, tamper,
                 f'--level={level}', f'--risk={risk}', f'--threads={threads}', '-v', str(verbose),
-             data, cookie, method, technique, dbms, dbs, tables, dump] + database_name+tables_name,
+             data, cookie, method, technique, dbms, dbs, tables, dump] + database_name_l + tables_name_l,
             ['tee', f'{path}/sqlmap.log']
         ])
 
@@ -612,7 +625,7 @@ class HackService:
     #
     # --------------------------------------------------------------------------
 
-    def smb(self, hosts: str, ports: str = '139,445') -> None:
+    def smb(self, hosts: str, ports: str = '139;445') -> None:
         '''
             ...
         '''
@@ -620,7 +633,7 @@ class HackService:
         log_runBanner(service_name)
 
         for host in hosts.split(' '):
-            for port in ports.split(','):
+            for port in ports.split(default_split_by):
                 path = self.utils.create_service_folder(f'scan/smb', host)
 
                 # SMBCLIENT ############################################################
@@ -658,7 +671,7 @@ class HackService:
         path = self.utils.create_service_folder(f'scan/smb', hosts)
         smb_options = ['--script', 'smb-vuln-*,smb-os-discovery,smb-enum-shares.nse,smb-enum-users.nse']
         n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv'] + smb_options
-        self.nmap(host=hosts, ports=ports, udp=True, options=n_options, path=path, silent=False)
+        self.nmap(host=hosts, port=ports, udp=True, options=n_options, path=path, silent=False)
 
     def rpc(self, hosts: str, ports: str = '111') -> None:
         '''
@@ -692,7 +705,7 @@ class HackService:
         ########################################################################
         rpc_options = ['--script', 'nfs-ls,nfs-statfs,nfs-showmount']
         n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv'] + rpc_options
-        self.nmap(host=hosts, ports=ports, udp=True, options=n_options, path=path, silent=False)
+        self.nmap(host=hosts, port=ports, udp=True, options=n_options, path=path, silent=False)
 
     # --------------------------------------------------------------------------
     #

@@ -1,17 +1,45 @@
-"""
+'''
     will setup the project, by install it local
     with needed dependencies
-"""
-import re
-import unicodedata
+'''
+import os
 from subprocess import check_call
 
 from setuptools import find_packages, setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 
-from app.utils.config import (AUTHOR, AUTHOR_EMAIL, LICENSE, PROJECT_NAME,
-                              VERSION)
+PROJECT_NAME: str = os.getenv('PROJECT_NAME', 'vm_recon')
+VERSION: str = os.getenv('VERSION', '0.0.1')
+SCRIPT_INST: bool = os.getenv('VM_SCRIPT_INST', False)
+
+
+def main():
+    PROJECT_NAME_SLUG = slugify(PROJECT_NAME)
+    setup(
+        name=PROJECT_NAME,
+        version=VERSION,
+        license='GNU AGPLv3',
+        description=PROJECT_NAME,
+        long_description=read_long_description(),
+        long_description_content_type='text/markdown',
+        author='MVladislav',
+        author_email='info@mvladislav.online',
+        packages=find_packages(),
+        data_files=[('', ['requirements.txt', 'scripts/setup.sh', 'scripts/setup-dev.sh'])],
+        include_package_data=True,
+        cmdclass={
+            'develop': PostDevelopCommand,
+            'install': PostInstallCommand,
+        },
+        install_requires=read_requirements(),
+        # python_requires='>=3.8',
+        zip_safe=True,
+        entry_points=f'''
+            [console_scripts]
+            {PROJECT_NAME_SLUG}=app.main:cli
+        ''',
+    )
 
 # ------------------------------------------------------------------------------
 #
@@ -21,22 +49,24 @@ from app.utils.config import (AUTHOR, AUTHOR_EMAIL, LICENSE, PROJECT_NAME,
 
 
 class PostDevelopCommand(develop):
-    """
+    '''
         Post-installation for development mode.
-    """
+    '''
 
     def run(self):
-        check_call(['/bin/bash', './scripts/setup-dev.sh'])
+        if SCRIPT_INST:
+            check_call(['/bin/bash', './scripts/setup-dev.sh'])
         develop.run(self)
 
 
 class PostInstallCommand(install):
-    """
+    '''
         Post-installation for installation mode.
-    """
+    '''
 
     def run(self):
-        check_call(['/bin/bash', './scripts/setup.sh'])
+        if SCRIPT_INST:
+            check_call(['/bin/bash', './scripts/setup.sh'])
         install.run(self)
 
 # ------------------------------------------------------------------------------
@@ -47,22 +77,22 @@ class PostInstallCommand(install):
 
 
 def read_long_description():
-    """
+    '''
         load the readme to add as long description
-    """
-    with open("README.md", "r", encoding="utf-8") as fh:
+    '''
+    with open('README.md', 'r', encoding='utf-8') as fh:
         long_description = fh.read()
     return long_description
 
 
 def read_requirements():
-    """
+    '''
         load and read the dependencies
         from the requirements.txt file
         and return them as a list
-    """
-    with open("requirements.txt", "r", encoding="utf-8") as req:
-        requirements = req.read().split("\n")
+    '''
+    with open('requirements.txt', 'r', encoding='utf-8') as req:
+        requirements = req.read().split('\n')
     return requirements
 
 # ------------------------------------------------------------------------------
@@ -73,6 +103,9 @@ def read_requirements():
 
 
 def slugify(value, allow_unicode=False):
+    import re
+    import unicodedata
+
     value = str(value)
     if allow_unicode:
         value = unicodedata.normalize('NFKC', value)
@@ -87,31 +120,5 @@ def slugify(value, allow_unicode=False):
 # ------------------------------------------------------------------------------
 
 
-PROJECT_NAME_SLUG = slugify(PROJECT_NAME)
-
-setup(
-    name=PROJECT_NAME,
-    version=VERSION,
-    license=LICENSE,
-    description=PROJECT_NAME,
-    long_description=read_long_description(),
-    long_description_content_type="text/markdown",
-    author=AUTHOR,
-    author_email=AUTHOR_EMAIL,
-    # package_dir={"": "app"},
-    # packages=find_packages(where="app"),
-    packages=find_packages(),
-    data_files=[('', ['requirements.txt', 'scripts/setup.sh', 'scripts/setup-dev.sh', 'scripts/vm_recon_path.sh'])],
-    include_package_data=True,
-    cmdclass={
-        'develop': PostDevelopCommand,
-        'install': PostInstallCommand,
-    },
-    install_requires=read_requirements(),
-    python_requires=">=3.8",
-    zip_safe=True,
-    entry_points=f"""
-        [console_scripts]
-        {PROJECT_NAME_SLUG}=app.main:cli
-    """,
-)
+if __name__ == "__main__":
+    main()

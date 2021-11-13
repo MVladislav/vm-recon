@@ -13,6 +13,10 @@
     - [nmap without root `(--privileged)`](#nmap-without-root---privileged)
   - [install](#install)
     - [DEBUG `(PREFERRED)`](#debug-preferred)
+    - [docker](#docker)
+  - [code quality and git](#code-quality-and-git)
+    - [pre-commit](#pre-commit)
+    - [manual test run](#manual-test-run)
 
 ---
 
@@ -70,4 +74,35 @@ $mkdir -p "$HOME/.vm_recon"
 $python3 -m venv "$HOME/.vm_recon/venv"
 $source "$HOME/.vm_recon/venv/bin/activate"
 $pip3 install -v --editable .
+```
+
+### docker
+
+run **docker-compose** build and up
+
+```sh
+$DOCKER_BUILDKIT=1 docker-compose build
+$DOCKER_BUILDKIT=1 docker-compose up
+```
+
+---
+
+## code quality and git
+
+### pre-commit
+
+run:
+
+```sh
+$git config --local core.hooksPath .git/hooks
+$pre-commit install
+```
+
+### manual test run
+
+```sh
+$mypy app
+$flake8 app
+$pytest --cov=tests
+$tox
 ```

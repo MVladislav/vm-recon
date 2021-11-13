@@ -301,6 +301,7 @@ for npm_to_install in "${npms_to_install[@]}"; do
   npm install -g "$npm_to_install"
 done
 
+# make
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "git@github.com:nmap/nmap.git"
 ./configure --prefix "$vm_prefix"
@@ -314,18 +315,28 @@ cd src/
 make
 make install
 
+# info files
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/danielmiessler/SecLists.git"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-clone_or_pull_and_cd "git@github.com:mrschyte/nmap-converter.git"
+clone_or_pull_and_cd "https://github.com/honze-net/nmap-bootstrap-xsl.git"
+
+# py
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/mrschyte/nmap-converter.git"
+pip3 install -r requirements.txt
 ln -sf "$PWD/nmap-converter.py" "$vm_run/nmap-converter"
 
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# echo 'inst:: git:: nmap-bootstrap-xsl'
-# cd "$vm_path_git"
-# git clone git@github.com:honze-net/nmap-bootstrap-xsl.git
+# clone_or_pull_and_cd "https://github.com/laramies/theHarvester.git"
+# pip3 install .
 
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# clone_or_pull_and_cd "https://github.com/enablesecurity/wafw00f.git"
+# pip3 install .
+
+# other
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/slimm609/checksec.sh.git"
 ln -sf "$PWD/checksec" "$vm_run/checksec"
@@ -350,14 +361,6 @@ wget https://wordlists-cdn.assetnote.io/data/kiterunner/routes-large.kite.tar.gz
 tar -xvf routes-large.kite.tar.gz
 rm routes-large.kite.tar.gz
 ln -sf "$PWD/kr" "$vm_run/kr"
-
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# clone_or_pull_and_cd "https://github.com/laramies/theHarvester.git"
-# pip3 install .
-
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# clone_or_pull_and_cd "https://github.com/enablesecurity/wafw00f.git"
-# pip3 install .
 
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # clone_or_pull_and_cd "https://github.com/andresriancho/w3af.git"
