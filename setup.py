@@ -11,7 +11,7 @@ from setuptools.command.install import install
 
 PROJECT_NAME: str = os.getenv('PROJECT_NAME', 'vm_recon')
 VERSION: str = os.getenv('VERSION', '0.0.1')
-SCRIPT_INST: bool = os.getenv('VM_SCRIPT_INST', False)
+SCRIPT_INST: bool = os.getenv('VM_SCRIPT_INST', True)
 
 
 def main():

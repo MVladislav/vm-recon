@@ -16,11 +16,11 @@ default_split_by = ','
 # ------------------------------------------------------------------------------
 
 
-@click.group(invoke_without_command=True)
+@click.group()
 @pass_context
 def cli(ctx: Context):
     '''
-        A wrapper for hacking/recon services
+        A wrapper for recon services
         with predefined params
     '''
     if ctx.utils is not None:
@@ -38,17 +38,42 @@ def cli(ctx: Context):
 
 @cli.command()
 @click.option('-d', '--host', type=str, help='host to scan for', required=True)
-@click.option('-n', '--nameserver', type=str, help='define nameserver [""]', default='')
-@click.option('-t', '--record_type', type=str, help='define record type [ANY]', default='ANY')
-@click.option('-p', '--port', type=int, help='define port [53]', default=53)
-@click.option('-is', '--is_subdomain', is_flag=True, help='is host a subdomain')
+@click.option('-s', '--ssl-verify', is_flag=True, help='if certificate should be checked [True]')
 @pass_context
-def dns(ctx: Context, host, nameserver, record_type, port, is_subdomain):
+def clone_page(ctx: Context, host: str, ssl_verify: bool):
+    '''
+        page clone scan
+    '''
+    try:
+        service: HackService = ctx.service
+        service.clone_page(host=host, ssl_verify=not ssl_verify)
+    except KeyboardInterrupt as k:
+        logging.log(logging.DEBUG, f'process interupted! ({k})')
+        sys.exit(5)
+    except Exception as e:
+        logging.log(logging.CRITICAL, e, exc_info=True)
+        sys.exit(2)
+
+# ------------------------------------------------------------------------------
+#
+#
+#
+# ------------------------------------------------------------------------------
+
+
+@cli.command()
+@click.option('-d', '--host', type=str, help='host to scan for', required=True)
+@click.option('-n', '--nameserver', type=str, help='define nameserver [None]', default=None)
+@click.option('-t', '--record_type', type=click.Choice(['ANY', 'TXT', 'A', 'NS', 'MX', 'CNAME', 'AXFR', 'SOA']), help='define record type [None]', default=None)
+@click.option('-p', '--port', type=int, help='define port [53]', default=53)
+@click.option('-is', '--is_subdomain', is_flag=True, help='is host a subdomain [False]')
+@pass_context
+def dns(ctx: Context, host: str, nameserver: str, record_type: str, port: int, is_subdomain: bool):
     '''
         DNS scan
     '''
-    service: HackService = ctx.service
     try:
+        service: HackService = ctx.service
         service.dns(host=host, ns=nameserver, record_type=record_type, port=port, is_subdomain=is_subdomain)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f'process interupted! ({k})')
@@ -65,8 +90,8 @@ def domain(ctx: Context, domain: str):
     '''
         DOMAIN scan
     '''
-    service: HackService = ctx.service
     try:
+        service: HackService = ctx.service
         service.domain(domain=domain)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f'process interupted! ({k})')
@@ -83,8 +108,8 @@ def tls(ctx: Context, domain):
     '''
         TLS scan
     '''
-    service: HackService = ctx.service
     try:
+        service: HackService = ctx.service
         service.tls(domain=domain)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f'process interupted! ({k})')
@@ -308,8 +333,8 @@ def whatweb(ctx: Context, host, silent):
     '''
         WHATWEB scan
     '''
-    service: HackService = ctx.service
     try:
+        service: HackService = ctx.service
         service.whatweb(host=host, silent=silent)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f'process interupted! ({k})')
@@ -327,8 +352,8 @@ def wpscan(ctx: Context, host, silent):
     '''
         WPSCAN scan
     '''
-    service: HackService = ctx.service
     try:
+        service: HackService = ctx.service
         service.wpscan(host=host, silent=silent)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f'process interupted! ({k})')
@@ -384,8 +409,8 @@ def pwn(ctx: Context, file):
     '''
         pwn scan
     '''
-    service: HackService = ctx.service
     try:
+        service: HackService = ctx.service
         service.pwn(file=file)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f'process interupted! ({k})')

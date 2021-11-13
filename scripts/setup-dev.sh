@@ -115,6 +115,7 @@ echo ''
 echo "init:: venv"
 python3 -m venv "$vm_path/venv"
 source "$vm_path/venv/bin/activate"
+pip3 install --upgrade pip
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo ''
@@ -332,9 +333,9 @@ ln -sf "$PWD/nmap-converter.py" "$vm_run/nmap-converter"
 # clone_or_pull_and_cd "https://github.com/laramies/theHarvester.git"
 # pip3 install .
 
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# clone_or_pull_and_cd "https://github.com/enablesecurity/wafw00f.git"
-# pip3 install .
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/enablesecurity/wafw00f.git"
+pip3 install .
 
 # other
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

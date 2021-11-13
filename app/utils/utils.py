@@ -44,6 +44,8 @@ class Context:
         self.base_path: str = BASE_PATH
         self.home_path: Path = Path.home()
 
+        self.use_sudo: List[str] = []
+
         self.utils: Union[Utils, None] = None
 
         self.disable_split_project: Union[bool, None] = None

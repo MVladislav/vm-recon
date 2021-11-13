@@ -1,3 +1,5 @@
+from typing import Union
+
 from starlette.config import Config
 
 # ------------------------------------------------------------------------------
@@ -42,7 +44,7 @@ BASE_PATH: str = config('VM_BASE_PATH', default=f'.')
 # ------------------------------------------------------------------------------
 
 # It is required to do a free registration and create a license key
-GEO_LICENSE_KEY: str = config('GEO_LICENSE_KEY',  default=None)
+GEO_LICENSE_KEY: Union[str, None] = config('GEO_LICENSE_KEY',  default=None)
 # docs: https://dev.maxmind.com/geoip/geoip2/geolite2/
 GEO_LITE_TAR_FILE_URL = f'https://download.maxmind.com/app/geoip_download' \
                         f'?edition_id=GeoLite2-City' \
