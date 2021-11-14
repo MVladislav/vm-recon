@@ -63,7 +63,7 @@ class HackService:
             options.append('--no-check-certificate')
 
         self.utils.run_command_output_loop(f'clone page {host}', [
-            ['wget', '-r', '-nHp', host, '-P', path] + options,
+            ['wget', '-r', '-nHp', host, '-P', path]+options,
             ['tee', f'{path}/page_clone.log']
         ])
 
@@ -172,13 +172,13 @@ class HackService:
             ])
         elif mode == 'subfinder' and domain is not None:
             self.utils.run_command_output_loop(f'recon {mode}', [
-                ['subfinder', '-d', domain, '-o', f'{path}/subfinder_rec', '-r', ns] + options_1,
+                ['subfinder', '-d', domain, '-o', f'{path}/subfinder_rec', '-r', ns]+options_1,
                 ['httpx'],
                 ['tee', f'{path}/subfinder_rec.log']
             ])
         elif mode == 'subfinder_api' and domain is not None:
             self.utils.run_command_output_loop(f'recon {mode}', [
-                ['subfinder', '-d', domain, '-o', f'{path}/subfinder_censys', '-r', ns] + options_2,
+                ['subfinder', '-d', domain, '-o', f'{path}/subfinder_censys', '-r', ns]+options_2,
                 ['tee', f'{path}/subfinder_censys.log']
             ])
         elif mode == 'amass_whois' and domain is not None:
@@ -258,7 +258,7 @@ class HackService:
                 file_suffix_2 = f'_{test_02}' if test_02 and len(test_02) > 0 else ''
                 cur_record = [test_01] if test_01 and len(test_01) > 0 else []
                 self.utils.run_command_output_loop('dig', [
-                    ['dig'] + mode_subdomain + cur_record + mode_plus + ['-p', str(port)] + nameserver + [f'{test_02}{host}'],
+                    ['dig']+mode_subdomain+cur_record+mode_plus+['-p', str(port)]+nameserver+[f'{test_02}{host}'],
                     ['tee', f'{path}/dig_dns{file_suffix_1}{file_suffix_2}.log'],
                 ])
 
@@ -384,10 +384,14 @@ class HackService:
         # TODO: ...
         if validators.url(host_to_check, public=True):
             logging.log(logging.DEBUG, "domain is a public host, try add script-args")
+            options_script_args_extend = []
             if SECRET_SHODAN_API_KEY is not None:
-                options_script_args.extend(['--script-args', f'shodan-api.apikey={SECRET_SHODAN_API_KEY}'])
+                options_script_args_extend.append(f'shodan-api.apikey={SECRET_SHODAN_API_KEY}')
             if GEO_LICENSE_KEY is not None:
-                options_script_args.extend(['--script-args', f'ip-geolocation.maxmind_db={self.utils.geo()}'])
+                options_script_args_extend.append(f'ip-geolocation.maxmind_db={self.utils.geo()}')
+            if len(options_script_args_extend) > 0:
+                options_script_args.append('--script-args')
+                options_script_args.append(','.join(options_script_args_extend))
         else:
             logging.log(logging.WARNING, 'if you want to add script-args, you need to provide a public valid host')
 
@@ -395,17 +399,17 @@ class HackService:
         options_improve_scan = [f'--min-rate={rate}', f'-T{t_scan}']
 
         # nmap --privileged  -Pn -n -sn -PE
-        options_host_scan = ['-Pn', '-n', '-sn', '-PE'] + options_improve_scan + mode_decoy
+        options_host_scan = ['-Pn', '-n', '-sn', '-PE']+options_improve_scan+mode_decoy
 
         # nmap --privileged -Pn -n --disable-arp-ping -p-
-        options_port_scan = ['-Pn', '-n', '--disable-arp-ping'] + options_improve_scan + mode_decoy + port_range_scan
-        options_port_udp_scan = options_port_scan + ['-sU', '-sT', '--max-retries=1']
+        options_port_scan = ['-Pn', '-n', '--disable-arp-ping']+options_improve_scan+mode_decoy+port_range_scan
+        options_port_udp_scan = options_port_scan+['-sU', '-sT', '--max-retries=1']
 
         options_output_format = ['-oX', f'{path}/inital.xml', '-oA', f'{path}/inital']
         if self.ctx.logging_verbose is not None and self.ctx.logging_verbose >= 3:
             options.append('-d')
-        options_full_scan = ['--reason'] + options_improve_scan + \
-            mode_decoy + options_output_format + options_script_args + options
+        options_full_scan = ['--reason']+options_improve_scan +\
+            mode_decoy+options_output_format+options_script_args+options
 
         # nmap_report_hosts = self.utils.nmap_process('nmap host up scan', hosts, options_host_scan)
         # hosts = [host.address for host in nmap_report_hosts.hosts if host.is_up()]
@@ -413,7 +417,7 @@ class HackService:
 
         if isinstance(hosts, List):
             hosts = self.utils.run_command_output_loop('nmap host-up scan', [
-                ['nmap'] + options_privileged + options_host_scan + hosts,
+                ['nmap']+options_privileged+options_host_scan+hosts,
                 # TODO: check grep when scan between ip and domain
                 ['grep', 'report for'],
                 ['cut', '-d', ' ', '-f5'],
@@ -444,7 +448,7 @@ class HackService:
 
                 if udp:
                     ports = self.utils.run_command_output_loop('nmap udp ports scan', [
-                        self.ctx.use_sudo + ['nmap'] + options_privileged + options_port_udp_scan + hosts,
+                        self.ctx.use_sudo+['nmap']+options_privileged+options_port_udp_scan+hosts,
                         ['grep', '^[0-9]'],
                         ['cut', '-d', '/', '-f', '1'],
                         ['sort'],
@@ -454,7 +458,7 @@ class HackService:
                     ])
                 else:
                     ports = self.utils.run_command_output_loop('nmap tcp ports scan', [
-                        self.ctx.use_sudo + ['nmap'] + options_privileged + options_port_scan + hosts,
+                        self.ctx.use_sudo+['nmap']+options_privileged+options_port_scan+hosts,
                         ['grep', '^[0-9]'],
                         ['cut', '-d', '/', '-f', '1'],
                         ['sort'],
@@ -472,7 +476,7 @@ class HackService:
                     file.write('\n'.join(ports))
                 # RUN full scan for information's
                 self.utils.run_command_output_loop('nmap scan', [
-                    self.ctx.use_sudo + ['nmap'] + options_privileged + options_full_scan + ['-p', ','.join(ports)] + hosts,
+                    self.ctx.use_sudo+['nmap']+options_privileged+options_full_scan+['-p', ','.join(ports)]+hosts,
                     ['tee', f'{path}/nmap.log']
                 ])
                 # nmap_report = self.utils.nmap_process('nmap scan', hosts, options_full_scan+['-p', ','.join(ports)], safe_mode=False)
@@ -502,7 +506,7 @@ class HackService:
         path: str = self.utils.create_service_folder(f'scan/masscan', host)
 
         self.utils.run_command_output_loop('masscan', [
-            self.ctx.use_sudo + ['masscan', host, '-oX', f'{path}/masscan.xml'] + options
+            self.ctx.use_sudo+['masscan', host, '-oX', f'{path}/masscan.xml']+options
         ])
         self.utils.run_command_output_loop('xsltproc', [
             ['xsltproc', '-o', f'{path}/final-masscan.html',
@@ -545,20 +549,20 @@ class HackService:
         wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/raft-medium-words.txt' if w_list is None else w_list
 
         if exclude_length is not None:
-            options + ['--exclude-length', str(exclude_length)]
+            options+['--exclude-length', str(exclude_length)]
 
         if type == 'dir' or type is None:
             wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
             self.utils.run_command_output_loop('gobuster dir', [
                 ['gobuster', 'dir', '-u', host, '-w', wordlist, '-r', '-t',
-                    str(threads), '-o', f'{path}/gobuster_dir'] + options,
+                    str(threads), '-o', f'{path}/gobuster_dir']+options,
                 ['tee', f'{path}/gobuster_dir.log']
             ])
         elif type == 'vhost':
             wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list is None else w_list
             self.utils.run_command_output_loop('gobuster vhost', [
                 ['gobuster', 'vhost', '-u', host, '-w', wordlist, '-r', '-t',
-                    str(threads), '-o', f'{path}/gobuster_vhost'] + options,
+                    str(threads), '-o', f'{path}/gobuster_vhost']+options,
                 ['tee', f'{path}/gobuster_vhost.log']
             ])
         elif type == 'fuzz':
@@ -571,21 +575,21 @@ class HackService:
             # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/CMS/wp-themes.fuzz.txt' if w_list is None else w_list
             self.utils.run_command_output_loop('gobuster fuzz', [
                 ['gobuster', 'fuzz', '-u', host, '-w', wordlist, '-r', '-t',
-                    str(threads), '-o', f'{path}/gobuster_fuzz'] + options,
+                    str(threads), '-o', f'{path}/gobuster_fuzz']+options,
                 ['tee', f'{path}/gobuster_fuzz.log']
             ])
         elif type == 'dns':
             wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list is None else w_list
             self.utils.run_command_output_loop('gobuster dns', [
                 ['gobuster', 'dns', '-d', host, '-w', wordlist, '-r', '-t',
-                    str(threads), '-o', f'{path}/gobuster_dns'] + options,
+                    str(threads), '-o', f'{path}/gobuster_dns']+options,
                 ['tee', f'{path}/gobuster_dns.log']
             ])
         elif type == 'bak':
             wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
             self.utils.run_command_output_loop('gobuster bak', [
                 ['gobuster', 'dir', '-u', host, '-w', wordlist, '-d', '-r',
-                    '-t', str(threads), '-o', f'{path}/gobuster_back'] + options,
+                    '-t', str(threads), '-o', f'{path}/gobuster_back']+options,
                 ['tee', f'{path}/gobuster_back.log']
             ])
         else:
@@ -656,7 +660,7 @@ class HackService:
         self.utils.run_command_output_loop('sqlmap', [
             ['sqlmap', '-u', host, random_agent, banner, parse_errors, tamper,
                 f'--level={level}', f'--risk={risk}', f'--threads={threads}', '-v', str(verbose),
-             data, cookie, method, technique, dbms, dbs, tables, dump] + database_name_l + tables_name_l,
+             data, cookie, method, technique, dbms, dbs, tables, dump]+database_name_l+tables_name_l,
             ['tee', f'{path}/sqlmap.log']
         ])
 
@@ -713,7 +717,7 @@ class HackService:
         ########################################################################
         path = self.utils.create_service_folder(f'scan/smb', hosts)
         smb_options = ['--script', 'smb-vuln-*,smb-os-discovery,smb-enum-shares.nse,smb-enum-users.nse']
-        n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv'] + smb_options
+        n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv']+smb_options
         self.nmap(host=hosts, port=ports, udp=True, options=n_options, path=path, silent=False)
 
     def rpc(self, hosts: str, ports: str = '111') -> None:
@@ -747,7 +751,7 @@ class HackService:
         # NMAP #################################################################
         ########################################################################
         rpc_options = ['--script', 'nfs-ls,nfs-statfs,nfs-showmount']
-        n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv'] + rpc_options
+        n_options = ['-sV', '-O', '-T4', '-PE', '-Pn', '-n', '--open', '-vv']+rpc_options
         self.nmap(host=hosts, port=ports, udp=True, options=n_options, path=path, silent=False)
 
     # --------------------------------------------------------------------------
@@ -789,7 +793,7 @@ class HackService:
         to_file = ['-o', f'{path}/wpscan']
 
         self.utils.run_command_output_loop(f'wpscan {mode}', [
-            ['wpscan', '--url', host] + options + to_file + mode,
+            ['wpscan', '--url', host]+options+to_file+mode,
             ['tee', f'{path}/wpscan.log']
         ])
 
