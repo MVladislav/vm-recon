@@ -1,13 +1,14 @@
 import logging
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Any, List, Union
 
 import yaml
 
-from ..utils.config import (SUBFINDER_CENSYS_SECRET, SUBFINDER_CENSYS_USERNAME,
-                            SUBFINDER_SHODAN_API_KEY)
+from ..utils.config import (SECRET_CENSYS_SECRET, SECRET_CENSYS_USERNAME,
+                            SECRET_INSTAGRAM_SSID, SECRET_SHODAN_API_KEY)
 from ..utils.defaultLogBanner import log_runBanner
 from ..utils.utils import Context, Utils
 
@@ -108,8 +109,8 @@ class HackService:
                 'sources': sources,
                 'all-sources': sources,
                 'recursive': sources,
-                'censys': [f'{SUBFINDER_CENSYS_USERNAME}:{SUBFINDER_CENSYS_SECRET}'],
-                'shodan': [f'{SUBFINDER_SHODAN_API_KEY}'],
+                'censys': [f'{SECRET_CENSYS_USERNAME}:{SECRET_CENSYS_SECRET}'],
+                'shodan': [f'{SECRET_SHODAN_API_KEY}'],
                 # 'virustotal': [f'{TODO}'],
                 # 'passivetotal': [f'{TODO},{TODO}'],
                 # 'securitytrails': [f'{TODO}'],
@@ -147,11 +148,6 @@ class HackService:
                 # -h 'Cookie: foo=bar;Authorization: token'
                 ['hakrawler', '-d', str(depth), '-t', str(threads), '-insecure'],
                 ['tee', f'{path}/hakrawler.log']
-            ])
-        elif mode == 'emailfinder':
-            self.utils.run_command_output_loop(f'recon {mode}', [
-                ['emailfinder', '-d', domain],
-                ['tee', f'{path}/emailfinder.log']
             ])
         elif mode == 'subfinder':
             self.utils.run_command_output_loop(f'recon {mode}', [
@@ -363,8 +359,8 @@ class HackService:
 
         # TODO: ...
         options_script_args = []
-        if SUBFINDER_SHODAN_API_KEY is not None:
-            options_script_args = ['--script-args', f'shodan-api.apikey={SUBFINDER_SHODAN_API_KEY}']
+        if SECRET_SHODAN_API_KEY is not None:
+            options_script_args = ['--script-args', f'shodan-api.apikey={SECRET_SHODAN_API_KEY}']
 
         options_privileged = ['--privileged']
         options_improve_scan = [f'--min-rate={rate}', f'-T{t_scan}']
@@ -443,14 +439,14 @@ class HackService:
                     file.write('\n'.join(ports))
                 # RUN full scan for information's
                 self.utils.run_command_output_loop('nmap scan', [
-                    self.ctx.use_sudo + ['nmap'] + options_privileged + options_full_scan + ['-p', ','.join(ports)] + hosts
+                    self.ctx.use_sudo + ['nmap'] + options_privileged + options_full_scan + ['-p', ','.join(ports)] + hosts,
+                    ['tee', f'{path}/nmap.log']
                 ])
                 # nmap_report = self.utils.nmap_process('nmap scan', hosts, options_full_scan+['-p', ','.join(ports)], safe_mode=False)
 
                 if os.path.isfile(f'{path}/inital.xml'):
                     self.utils.run_command_output_loop('nmap convert xls', [
-                        ['nmap-converter', f'{path}/inital.xml', '-o', f'{path}/inital.xls'],
-                        ['tee', f'{path}/nmap.log']
+                        ['nmap-converter', f'{path}/inital.xml', '-o', f'{path}/inital.xls']
                     ])
                     self.utils.run_command_output_loop('nmap convert html', [
                         ['xsltproc', f'{path}/inital.xml', '-o', f'{path}/inital.html']
@@ -763,6 +759,56 @@ class HackService:
             ['wpscan', '--url', host] + options + to_file + mode,
             ['tee', f'{path}/wpscan.log']
         ])
+
+        logging.log(logging.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
+
+    def accounting(self, domain: Union[str, None] = None, username: Union[str, None] = None, email: Union[str, None] = None) -> None:
+        '''
+            ...
+        '''
+        service_name = 'ACCOUNTING'
+        log_runBanner(service_name)
+        splitter = None
+        loop_append = [username, email]
+        for a in loop_append:
+            if a is not None:
+                if splitter is None:
+                    splitter = a
+                else:
+                    splitter = f'{splitter}_{a}'
+
+        path = self.utils.create_service_folder(f'scan/accounting', splitter)
+
+        if domain is not None:
+            self.utils.run_command_output_loop(f'emailfinder', [
+                ['emailfinder', '-d', domain],
+                ['tee', f'{path}/emailfinder.log']
+            ])
+
+        if username is not None:
+            # '--output', f'{path}/sherlock.name'
+            cmd_result = self.utils.run_command_output_loop(f'sherlock', [
+                ['sherlock', username, '--folderoutput', f'{path}/'],
+                ['tee', f'{path}/sherlock.log']
+            ])
+
+            if cmd_result is not None:
+                search_insta = r'(?:.*?)instagram(?:.*?)\/(.*)'
+                found_insta = re.findall(search_insta, cmd_result)
+                if found_insta is not None:
+                    options_sterra = ['-t', 'both', '-a', '--descending', '--size', '15', '--all-infos']
+                    output_sterra = ['-p', f'{path}/sterra', '-f', 'csv']
+                    cred_sterra = []
+                    if SECRET_INSTAGRAM_SSID is not None:
+                        cred_sterra = ['-ssid', SECRET_INSTAGRAM_SSID]
+                        for fi in found_insta:
+                            cmd_result = self.utils.run_command_output_loop(f'sterra', [
+                                ['sterra', '-u', fi]+options_sterra+output_sterra+cred_sterra,
+                                ['tee', f'{path}/sterra_{fi}.log']
+                            ])
+
+        if email is not None:
+            pass
 
         logging.log(logging.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
 

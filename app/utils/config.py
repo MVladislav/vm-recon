@@ -61,12 +61,14 @@ GEO_DB_ZIP_FNAME = '/GeoIP2LiteCity.tar.gz'
 # ------------------------------------------------------------------------------
 
 # Set your API keys here
-SUBFINDER_CENSYS_USERNAME: str = config('CENSYS_USERNAME', default='<API-KEY-HERE>')
-SUBFINDER_CENSYS_SECRET: str = config('CENSYS_SECRET', default='<API-KEY-HERE>')
-SUBFINDER_SHODAN_API_KEY: str = config('SHODAN_API_KEY', default='<API-KEY-HERE>')
-SUBFINDER_VIRUSTOTAL_API_KEY: str = config('VIRUSTOTAL_API_KEY', default='<API-KEY-HERE>')
-SUBFINDER_PASSIVE_TOTAL_USERNAME: str = config('PASSIVE_TOTAL_USERNAME', default='<API-KEY-HERE>')
-SUBFINDER_PASSIVE_TOTAL_KEY: str = config('PASSIVE_TOTAL_KEY', default='<API-KEY-HERE>')
-SUBFINDER_SECURITY_TRAILS_KEY: str = config('SECURITY_TRAILS_KEY', default='<API-KEY-HERE>')
-SUBFINDER_RIDDLER_EMAIL: str = config('RIDDLER_EMAIL', default='<API-KEY-HERE>')
-SUBFINDER_RIDDLER_PASSWORD: str = config('RIDDLER_PASSWORD', default='<API-KEY-HERE>')
+SECRET_CENSYS_USERNAME: str = config('CENSYS_USERNAME', default=None)
+SECRET_CENSYS_SECRET: str = config('CENSYS_SECRET', default=None)
+SECRET_SHODAN_API_KEY: str = config('SHODAN_API_KEY', default=None)
+SECRET_VIRUSTOTAL_API_KEY: str = config('VIRUSTOTAL_API_KEY', default=None)
+SECRET_PASSIVE_TOTAL_USERNAME: str = config('PASSIVE_TOTAL_USERNAME', default=None)
+SECRET_PASSIVE_TOTAL_KEY: str = config('PASSIVE_TOTAL_KEY', default=None)
+SECRET_SECURITY_TRAILS_KEY: str = config('SECURITY_TRAILS_KEY', default=None)
+SECRET_RIDDLER_EMAIL: str = config('RIDDLER_EMAIL', default=None)
+SECRET_RIDDLER_PASSWORD: str = config('RIDDLER_PASSWORD', default=None)
+
+SECRET_INSTAGRAM_SSID: str = config('INSTAGRAM_SSID', default=None)

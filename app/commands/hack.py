@@ -362,6 +362,25 @@ def wpscan(ctx: Context, host, silent):
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
+
+@cli.command()
+@click.option('-u', '--username', type=str, help='username to search for')
+@click.option('-e', '--email', type=str, help='email to search for')
+@pass_context
+def accounting(ctx: Context, username: str, email: str):
+    '''
+        ACCOUNTING scan
+    '''
+    try:
+        service: HackService = ctx.service
+        service.accounting(username=username, email=email)
+    except KeyboardInterrupt as k:
+        logging.log(logging.DEBUG, f'process interupted! ({k})')
+        sys.exit(5)
+    except Exception as e:
+        logging.log(logging.CRITICAL, e, exc_info=True)
+        sys.exit(2)
+
 # ------------------------------------------------------------------------------
 #
 #
@@ -374,7 +393,7 @@ def wpscan(ctx: Context, host, silent):
 @click.option('-o', '--org', type=str, help='org to scan for', required=True)
 @click.option('-n', '--nameserver', type=str, help='the DNS server to use [1.1.1.1]', default='1.1.1.1')
 @click.option('-m', '--mode', type=click.Choice(
-    ['gospider', 'hakrawler', 'emailfinder', 'subfinder', 'subfinder_api', 'amass_whois', 'amass_org', 'passive', 'active', 'gau', 'theHarvester']),
+    ['gospider', 'hakrawler', 'subfinder', 'subfinder_api', 'amass_whois', 'amass_org', 'passive', 'active', 'gau', 'theHarvester']),
     help='recon tool to use (gospider)', default='gospider')
 @click.option('-t', '--threads', type=int, help='threads to use [10]', default=10)
 @click.option('-dp', '--depth', type=int, help='depth to scan for [2]', default=2)

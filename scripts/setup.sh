@@ -12,7 +12,7 @@ echo '* Copyright of MVladislav, 2021                                *'
 echo '* https://mvladislav.online                                    *'
 echo '* https://github.com/MVladislav                                *'
 echo '****************************************************************'
-echo '* PROD                                                         *'
+echo '* KONS                                                         *'
 echo '****************************************************************'
 echo ''
 
@@ -89,6 +89,13 @@ mkdir -p "$vm_path_git"
 mkdir -p "$vm_path_source"
 mkdir -p "$vm_prefix"
 mkdir -p "$vm_run"
+
+echo ''
+echo "init:: venv"
+export PYTHONPATH=
+python3 -m venv "$vm_path/venv"
+source "$vm_path/venv/bin/activate"
+python3 -m pip install --upgrade pip
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo ''
@@ -171,7 +178,7 @@ pips_to_install=(
 )
 for pip_to_install in "${pips_to_install[@]}"; do
   echo "--> inst:: pip3:: ${pip_to_install}"
-  pip3 install "$pip_to_install"
+  python3 -m pip install "$pip_to_install"
 done
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -243,8 +250,17 @@ clone_or_pull_and_cd "https://github.com/honze-net/nmap-bootstrap-xsl.git"
 # py
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/mrschyte/nmap-converter.git"
-pip3 install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ln -sf "$PWD/nmap-converter.py" "$vm_run/nmap-converter"
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/enablesecurity/wafw00f.git"
+python3 -m pip install .
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/sherlock-project/sherlock.git"
+python3 -m pip install -r requirements.txt
+ln -sf "$PWD/sherlock/sherlock.py" "$vm_run/sherlock"
 
 # other
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -257,7 +273,7 @@ ln -sf "$PWD/enum4linux.pl" "$vm_run/enum4linux"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "git@github.com:offensive-security/exploitdb.git"
-ln -sf "$PWD/searchsploit" "$vm_run/searchsploit"
+ln -sf "$PWD/" "$vm_run/searchsploit"
 sed -i "s|\"/opt/exploitdb\"|\"${PWD}\"|g" "$PWD/.searchsploit_rc"
 sed -i "s|\"/opt/exploitdb-papers\"|\"${PWD}/../exploitdb-papers\"|g" "$PWD/.searchsploit_rc"
 cp "$PWD/.searchsploit_rc" "$HOME"

@@ -9,9 +9,28 @@ from setuptools import find_packages, setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv('.env_project')
+except ImportError:
+    import logging
+    import sys
+
+    source_to_install = 'python-dotenv'
+    logging.log(logging.CRITICAL, f'Failed to Import {source_to_install}')
+    logging.log(logging.INFO, f'Attempting to Install {source_to_install}')
+    try:
+        import subprocess
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--user', '-q', source_to_install])
+        from dotenv import load_dotenv
+        load_dotenv('.env_project')
+        logging.log(logging.INFO, '[DONE]')
+    except Exception:
+        logging.log(logging.CRITICAL, '[FAIL]')
+
 PROJECT_NAME: str = os.getenv('PROJECT_NAME', 'vm_recon')
 VERSION: str = os.getenv('VERSION', '0.0.1')
-SCRIPT_INST: bool = os.getenv('VM_SCRIPT_INST', True)
+SCRIPT_INSTALL: bool = os.getenv('VM_SCRIPT_INSTALL', False)
 
 
 def main():
@@ -54,7 +73,7 @@ class PostDevelopCommand(develop):
     '''
 
     def run(self):
-        if SCRIPT_INST:
+        if SCRIPT_INSTALL:
             check_call(['/bin/bash', './scripts/setup-dev.sh'])
         develop.run(self)
 
@@ -65,7 +84,7 @@ class PostInstallCommand(install):
     '''
 
     def run(self):
-        if SCRIPT_INST:
+        if SCRIPT_INSTALL:
             check_call(['/bin/bash', './scripts/setup.sh'])
         install.run(self)
 

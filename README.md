@@ -64,7 +64,8 @@ $sudo setcap cap_net_raw,cap_net_admin,cap_net_bind_service+eip $(which nmap)
 ## install
 
 ```sh
-$pip3 install .
+$python3 -m pip install .
+# $pip3 install .
 ```
 
 ### DEBUG `(PREFERRED)`
@@ -73,7 +74,8 @@ $pip3 install .
 $mkdir -p "$HOME/.vm_recon"
 $python3 -m venv "$HOME/.vm_recon/venv"
 $source "$HOME/.vm_recon/venv/bin/activate"
-$pip3 install -v --editable .
+$python3 -m pip install -v -e .
+# $pip3 install -v --editable .
 ```
 
 ### docker

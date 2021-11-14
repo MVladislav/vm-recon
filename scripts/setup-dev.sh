@@ -113,9 +113,12 @@ mkdir -p "$vm_run"
 
 echo ''
 echo "init:: venv"
+export PYTHONPATH=
 python3 -m venv "$vm_path/venv"
 source "$vm_path/venv/bin/activate"
-pip3 install --upgrade pip
+# curl https://bootstrap.pypa.io/get-pip.py -o "$vm_path_git/get-pip.py"
+# python3 "$vm_path_git/get-pip.py"
+python3 -m pip install --upgrade pip
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo ''
@@ -226,35 +229,35 @@ export DESTDIR=""
 echo ''
 echo 'inst:: pip3:: services'
 pips_to_install=(
-  pip
+  #pip
+  #requests
+  #pyyaml
+  #pymongo
+  #aiodns
+  #aiohttp
+  # aiomultiprocess
+  #aiosqlite
+  #plotly
   sqlmap
+  pywhat
+  emailfinder
+  python-libnmap
+  XlsxWriter
+  updog
+  #
   wfuzz
-  pyyaml
-  pymongo
-  requests
+  impacket
   s3recon
   fierce
   dnspython
-  argparse
-  ndg-httpsclient
-  python-masscan
-  aiodns
-  aiohttp
-  aiosqlite
-  plotly
-  aiomultiprocess
-  python-libnmap
-  XlsxWriter
-  pywhat
   pysmb
-  impacket
+  python-masscan
   pypykatz
-  updog
-  emailfinder
+  #ndg-httpsclient
 )
 for pip_to_install in "${pips_to_install[@]}"; do
   echo "--> inst:: pip3:: ${pip_to_install}"
-  pip3 install "$pip_to_install"
+  python3 -m pip install "$pip_to_install"
 done
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -326,16 +329,25 @@ clone_or_pull_and_cd "https://github.com/honze-net/nmap-bootstrap-xsl.git"
 # py
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/mrschyte/nmap-converter.git"
-pip3 install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ln -sf "$PWD/nmap-converter.py" "$vm_run/nmap-converter"
 
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # clone_or_pull_and_cd "https://github.com/laramies/theHarvester.git"
-# pip3 install .
+# python3 -m pip install .
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/enablesecurity/wafw00f.git"
-pip3 install .
+python3 -m pip install .
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/sherlock-project/sherlock.git"
+python3 -m pip install -r requirements.txt
+ln -sf "$PWD/sherlock/sherlock.py" "$vm_run/sherlock"
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/novitae/sterraxcyl.git"
+python3 -m pip install .
 
 # other
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -348,7 +360,7 @@ ln -sf "$PWD/enum4linux.pl" "$vm_run/enum4linux"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "git@github.com:offensive-security/exploitdb.git"
-ln -sf "$PWD/searchsploit" "$vm_run/searchsploit"
+ln -sf "$PWD/" "$vm_run/searchsploit"
 sed -i "s|\"/opt/exploitdb\"|\"${PWD}\"|g" "$PWD/.searchsploit_rc"
 sed -i "s|\"/opt/exploitdb-papers\"|\"${PWD}/../exploitdb-papers\"|g" "$PWD/.searchsploit_rc"
 cp "$PWD/.searchsploit_rc" "$HOME"
@@ -411,17 +423,12 @@ exit 0
 
 ################################################################################
 #
-# sudo ln -s /usr/bin/python3 /usr/bin/python
-#
-# sudo ln -s /opt/git/exploitdb/searchsploit /usr/local/bin/ && chmod -R 755 /usr/local/bin/
+# https://github.com/jvoisin/php-malware-finder
 # sudo ln -s /opt/git/php-malware-finder/php-malware-finder/phpmalwarefinder /usr/local/bin/
-# sudo ln -s /opt/git/sherlock/sherlock/sherlock.py /usr/local/bin/
 #
 # masscan (make && sudo make install)
 # massdns (make && sudo make install)
-# john (./configure && make && sudo make install)
 # hashcat (make && sudo make install)
-# msfinstall
 # rlwrap (autoreconf --install && ./configure && make && sudo make install)
 #
 ################################################################################

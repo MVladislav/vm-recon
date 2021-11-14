@@ -85,9 +85,12 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'], ignore_unknown_optio
               help='command will only printed and not run [false]')
 @click.option('-s', '--sudo', is_flag=True,
               help='append sudo for command which need it [false]')
+@click.option('-t', '--terminal-read-mode', is_flag=True,
+              help='print on subprocess stdout also direct to console [false]')
 @pass_context
 def cli(ctx: Context, verbose: int, logging_level: str, home: str, project: str,
-        disable_split_project: bool, disable_split_host: bool, print_only_mode: bool, sudo: bool):
+        disable_split_project: bool, disable_split_host: bool, print_only_mode: bool, sudo: bool,
+        terminal_read_mode: bool):
     '''
         Welcome to {PROJECT_NAME}
 
@@ -109,5 +112,6 @@ def cli(ctx: Context, verbose: int, logging_level: str, home: str, project: str,
     ctx.disable_split_host = disable_split_host
     ctx.print_only_mode = print_only_mode
     ctx.use_sudo = ['sudo'] if sudo else []
+    ctx.terminal_read_mode = terminal_read_mode
 
     ctx.utils.update(ctx=ctx)
