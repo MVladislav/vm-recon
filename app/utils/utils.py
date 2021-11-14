@@ -3,7 +3,6 @@ import os
 import random
 import re
 import socket
-import subprocess
 import sys
 import time
 import unicodedata
@@ -15,6 +14,7 @@ from typing import IO, Any, Dict, List, Tuple, Union
 from urllib.parse import urlparse
 
 import click
+import verboselogs
 # from libnmap.objects.report import NmapReport
 # from libnmap.parser import NmapParser
 # from libnmap.process import NmapProcess
@@ -22,8 +22,9 @@ from progress.spinner import PixelSpinner
 from progressbar import ETA, Bar, Counter, ProgressBar, Timer
 from stringcolor import bold
 
-from .config import BASE_PATH, DEBUG, ENV_MODE, LOGGING_LEVEL, PROJECT_NAME
+from .config import BASE_PATH, ENV_MODE, LOGGING_LEVEL, PROJECT_NAME
 from .defaultLogBanner import log_runBanner
+from .locater import Locator
 
 # ------------------------------------------------------------------------------
 #
@@ -54,6 +55,9 @@ class Context:
         self.disable_split_host: Union[bool, None] = None
         self.print_only_mode: Union[bool, None] = None
         self.terminal_read_mode: bool = False
+
+        self.logging_verbose: Union[int, None] = None
+        self.logging_level: Union[str, None] = None
 
 
 pass_context = click.make_pass_decorator(Context, ensure=True)
@@ -219,7 +223,7 @@ class Utils:
                 logging.log(logging.CRITICAL, e, exc_info=True)
         return (sub_std_res, sub_err_res, is_interrupted)
 
-    def subprocess_handler(self, sub_p: Popen, input_value: Union[str, None] = None,
+    def subprocess_handler(self, sub_p: Popen[Any], input_value: Union[str, None] = None,
                            command: Union[str, None] = None
                            ) -> Tuple[Union[bytes, None], Union[bytes, None], bool]:
         sub_std: Union[bytes, None] = None
@@ -250,6 +254,8 @@ class Utils:
                     if sub_p.stdout is not None:
                         sub_p_std = sub_p.stdout
                 else:
+                    logging.log(
+                        logging.INFO, 'you run in terminal read mode, some function can maybe not print anything and you will see longer no response, please wait ...')
                     for stdout_line in sub_p.stdout:
                         if stdout_line is not None and len(stdout_line) > 0:
                             if sub_p_std is None:
@@ -259,14 +265,17 @@ class Utils:
                             logging.log(logging.INFO, stdout_line.decode().replace('\n', ''))
             if sub_p.stderr is not None:
                 sub_p_err = sub_p.stderr
-        except (SystemExit, KeyboardInterrupt) as e:
+        except (SystemExit, KeyboardInterrupt):
             is_interrupted = True
             if not self.ctx.terminal_read_mode:
                 if sub_p.stdout is not None:
                     sub_p_std = sub_p.stdout
             if sub_p.stderr is not None:
                 sub_p_err = sub_p.stderr
-            sub_p.kill()
+            try:
+                sub_p.kill()
+            except Exception:
+                pass
 
         if isinstance(sub_p_std, bytes):
             sub_std = sub_p_std
@@ -295,7 +304,7 @@ class Utils:
                 output = False
             for cmd in cmds:
                 if not is_interrupted or cmd[0] == 'tee':
-                    logging.log(logging.NOTICE, ' '.join(cmd))
+                    logging.log(verboselogs.NOTICE, ' '.join(cmd))
                     if output:
                         cmd_result, std_err, is_interrupted = self.run_command(
                             command_list=cmd, input_value=cmd_result)
@@ -306,12 +315,15 @@ class Utils:
                         break
                     if cmd_result is not None:
                         if len(cmd_result) > 0:
-                            logging.log(logging.SPAM, cmd_result)
+                            logging.log(verboselogs.SPAM, f'output is:\n{cmd_result}')
                         else:
                             cmd_result = None
                             if output:
                                 logging.log(logging.WARNING, 'no result available to pipe')
                                 break
+                    elif output:
+                        logging.log(logging.WARNING, 'no result available to pipe')
+                        break
         except KeyboardInterrupt as k:
             logging.log(logging.WARNING, f'process interupted! ({k})')
             raise KeyboardInterrupt
@@ -397,6 +409,16 @@ class Utils:
             pass
         return None
 
+    def geo(self) -> Union[str, None]:
+        '''
+            This is a geo test example
+        '''
+        try:
+            return Locator(ctx=self.ctx).check_database()
+        except Exception as e:
+            logging.log(logging.CRITICAL, e, exc_info=True)
+        return None
+
     # --------------------------------------------------------------------------
     #
     #
@@ -426,7 +448,7 @@ class Utils:
     # def nmap_process(self, msg: str, host: str, options: List[str], safe_mode: bool = True) -> NmapReport:
     #     try:
     #         log_runBanner(msg)
-    #         logging.log(logging.NOTICE, f'nmap {" ".join(host)} {" ".join(options)}')
+    #         logging.log(verboselogs.NOTICE, f'nmap {" ".join(host)} {" ".join(options)}')
     #         if not self.ctx.print_only_mode:
     #             nmap_proc: NmapProcess = NmapProcess(targets=host, options=' '.join(options), safe_mode=safe_mode)
     #             nmap_proc.run_background()

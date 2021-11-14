@@ -50,6 +50,8 @@ GEO_LITE_TAR_FILE_URL = f'https://download.maxmind.com/app/geoip_download' \
                         f'?edition_id=GeoLite2-City' \
                         f'&license_key={GEO_LICENSE_KEY}' \
                         f'&suffix=tar.gz'
+# TODO: add legacy
+# http://dev.maxmind.com/geoip/legacy/geolite/
 GEO_DB_FNAME = '/GeoLite2-City.mmdb'
 GEO_DB_ZIP_FNAME = '/GeoIP2LiteCity.tar.gz'
 
@@ -61,14 +63,14 @@ GEO_DB_ZIP_FNAME = '/GeoIP2LiteCity.tar.gz'
 # ------------------------------------------------------------------------------
 
 # Set your API keys here
-SECRET_CENSYS_USERNAME: str = config('CENSYS_USERNAME', default=None)
-SECRET_CENSYS_SECRET: str = config('CENSYS_SECRET', default=None)
-SECRET_SHODAN_API_KEY: str = config('SHODAN_API_KEY', default=None)
-SECRET_VIRUSTOTAL_API_KEY: str = config('VIRUSTOTAL_API_KEY', default=None)
-SECRET_PASSIVE_TOTAL_USERNAME: str = config('PASSIVE_TOTAL_USERNAME', default=None)
-SECRET_PASSIVE_TOTAL_KEY: str = config('PASSIVE_TOTAL_KEY', default=None)
-SECRET_SECURITY_TRAILS_KEY: str = config('SECURITY_TRAILS_KEY', default=None)
-SECRET_RIDDLER_EMAIL: str = config('RIDDLER_EMAIL', default=None)
-SECRET_RIDDLER_PASSWORD: str = config('RIDDLER_PASSWORD', default=None)
+SECRET_CENSYS_USERNAME: Union[str, None] = config('CENSYS_USERNAME', default=None)
+SECRET_CENSYS_SECRET: Union[str, None] = config('CENSYS_SECRET', default=None)
+SECRET_SHODAN_API_KEY: Union[str, None] = config('SHODAN_API_KEY', default=None)
+SECRET_VIRUSTOTAL_API_KEY: Union[str, None] = config('VIRUSTOTAL_API_KEY', default=None)
+SECRET_PASSIVE_TOTAL_USERNAME: Union[str, None] = config('PASSIVE_TOTAL_USERNAME', default=None)
+SECRET_PASSIVE_TOTAL_KEY: Union[str, None] = config('PASSIVE_TOTAL_KEY', default=None)
+SECRET_SECURITY_TRAILS_KEY: Union[str, None] = config('SECURITY_TRAILS_KEY', default=None)
+SECRET_RIDDLER_EMAIL: Union[str, None] = config('RIDDLER_EMAIL', default=None)
+SECRET_RIDDLER_PASSWORD: Union[str, None] = config('RIDDLER_PASSWORD', default=None)
 
-SECRET_INSTAGRAM_SSID: str = config('INSTAGRAM_SSID', default=None)
+SECRET_INSTAGRAM_SSID: Union[str, None] = config('INSTAGRAM_SSID', default=None)

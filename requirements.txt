@@ -5,6 +5,7 @@ verboselogs
 string-color
 progress
 progressbar
+validators
 
 maxminddb
 requests

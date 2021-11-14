@@ -113,5 +113,7 @@ def cli(ctx: Context, verbose: int, logging_level: str, home: str, project: str,
     ctx.print_only_mode = print_only_mode
     ctx.use_sudo = ['sudo'] if sudo else []
     ctx.terminal_read_mode = terminal_read_mode
+    ctx.logging_verbose = verbose
+    ctx.logging_level = logging_level
 
     ctx.utils.update(ctx=ctx)

