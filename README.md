@@ -9,11 +9,10 @@
 - [VM RECON](#vm-recon)
   - [dependencies](#dependencies)
   - [setups](#setups)
-    - [use install without root](#use-install-without-root)
+    - [use install(ed) without root](#use-installed-without-root)
     - [nmap without root `(--privileged)`](#nmap-without-root---privileged)
   - [install](#install)
     - [DEBUG `(PREFERRED)`](#debug-preferred)
-    - [docker](#docker)
   - [code quality and git](#code-quality-and-git)
     - [pre-commit](#pre-commit)
     - [manual test run](#manual-test-run)
@@ -51,7 +50,7 @@ _python with `setup.py` and `click` for **cli**_
 on run `pip` `install`, it will run **setup script** under `./scripts`
 which will install dependencies and useful tools for recon+
 
-### use install without root
+### use install(ed) without root
 
 copy ... from `scripts/vm_recon_path.sh` into `~/.bashrc` or `~/.zshrc`
 
@@ -76,15 +75,6 @@ $python3 -m venv "$HOME/.vm_recon/venv"
 $source "$HOME/.vm_recon/venv/bin/activate"
 $python3 -m pip install -v -e .
 # $pip3 install -v --editable .
-```
-
-### docker
-
-run **docker-compose** build and up
-
-```sh
-$DOCKER_BUILDKIT=1 docker-compose build
-$DOCKER_BUILDKIT=1 docker-compose up
 ```
 
 ---
