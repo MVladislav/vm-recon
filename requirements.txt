@@ -1,5 +1,15 @@
+starlette
 click
 coloredlogs
 verboselogs
-click-config-file
+string-color
+progress
+progressbar
+validators
+
+maxminddb
+requests
+types-requests
+
 pyyaml
+# python-libnmap

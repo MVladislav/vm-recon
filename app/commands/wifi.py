@@ -1,9 +1,10 @@
+import logging
 import sys
 
 import click
 
-from ..cli import Context, pass_context
 from ..service.wifi_service import WiFiService
+from ..utils.utils import Context, pass_context
 
 # ------------------------------------------------------------------------------
 #
@@ -19,7 +20,11 @@ def cli(ctx: Context):
         A wrapper for wifi services
         with predefined params
     '''
-    ctx.hack = WiFiService(ctx)
+    if ctx.utils is not None:
+        ctx.service = WiFiService(ctx)
+    else:
+        logging.log(logging.ERROR, f'utils are not set')
+        sys.exit(1)
 
 # ------------------------------------------------------------------------------
 #
@@ -29,17 +34,16 @@ def cli(ctx: Context):
 
 
 @cli.command()
-@click.pass_context
+@pass_context
 def test(ctx: Context):
     '''TEST scan'''
-    hack: WiFiService = ctx.obj.hack
+    service: WiFiService = ctx.service
     try:
-        pass
-        hack.utils.logging.debug(hack.find_nic())
-        # hack.<...>
+        logging.log(logging.DEBUG, service.find_nic())
+        # service.<...>
     except KeyboardInterrupt as k:
-        hack.utils.logging.debug(f"process interupted! ({k})")
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        hack.utils.logging.exception(e)
+        logging.log(logging.CRITICAL, e)
         sys.exit(2)

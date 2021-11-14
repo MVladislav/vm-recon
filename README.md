@@ -1,4 +1,4 @@
-# VM HACK
+# VM RECON
 
 ```sh
     MVladislav
@@ -6,101 +6,80 @@
 
 ---
 
-- [VM HACK](#vm-hack)
+- [VM RECON](#vm-recon)
   - [dependencies](#dependencies)
+  - [setups](#setups)
+    - [use install(ed) without root](#use-installed-without-root)
+    - [nmap without root `(--privileged)`](#nmap-without-root---privileged)
   - [install](#install)
-    - [DEBUG](#debug)
+    - [DEBUG `(PREFERRED)`](#debug-preferred)
 
 ---
 
-A python wrapper to call recon services with predefined params.
+A python wrapper to call recon-services with predefined params.
+
+_python with `setup.py` and `click` for **cli** recon base and default structured log saving_
 
 ## dependencies
 
 - **[nmap](https://github.com/nmap/nmap.git)**
-  > ```sh
-  > $./configure && make && sudo make install
-  > ```
 - **[masscan](https://github.com/robertdavidgraham/masscan.git)**
-  > ```sh
-  > $make && sudo make install
-  > ```
 - **[gobuster](https://github.com/OJ/gobuster.git)**
-  > ```sh
-  > $go get && go build && go install
-  > ```
 - **[kiterunner](https://github.com/assetnote/kiterunner.git)**
-  > ```sh
-  > $sudo ln -s /opt/git/kiterunner/dist/kr /usr/local/bin/
-  > ```
 - **[whatweb](https://github.com/urbanadventurer/WhatWeb.git)**
-  > ```sh
-  > $sudo make install
-  > ```
 - **[gospider](https://github.com/jaeles-project/gospider.git)**
-  > ```sh
-  > $go get -u -v github.com/jaeles-project/gospider
-  > ```
 - **[hakrawler](https://github.com/hakluke/hakrawler.git)**
-  > ```sh
-  > $go get -u -v github.com/hakluke/hakrawler
-  > ```
 - **[emailfinder](https://github.com/Josue87/EmailFinder.git)**
-  > ```sh
-  > $pip3 install .
-  > ```
 - **[subfinder](https://github.com/projectdiscovery/subfinder.git)**
-  > ```sh
-  > $go get -u -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder
-  > ```
 - **[amass](https://github.com/OWASP/Amass.git)**
-  > ```sh
-  > $go get -u -v github.com/OWASP/Amass/v3/...
-  > ```
 - **[gau](https://github.com/lc/gau.git)**
-  > ```sh
-  > $go get -u -v github.com/lc/gau
-  > ```
 - **[wpscan](https://github.com/wpscanteam/wpscan.git)**
-  > ```sh
-  > $sudo gem install wpscan
-  > ```
 - **[checksec](https://github.com/slimm609/checksec.sh.git)**
-  > ```sh
-  > $sudo ln -s /opt/git/checksec/checksec /usr/local/bin/
-  > ```
 - **[nmap-converter.py](https://github.com/mrschyte/nmap-converter.git)**
-  > ```sh
-  > $sudo ln -s /opt/git/nmap-converter/nmap-converter.py /usr/local/bin/
-  > ```
 - **xsltproc**
-  > ```sh
-  > $sudo apt instal xsltproc
-  > ```
 - **dig**
-  > ```sh
-  > $sudo apt instal dnsutils
-  > ```
 - **host**
-  > ```sh
-  > $sudo apt instal dnsutils
-  > ```
 - **openssl**
-  > ```sh
-  > $sudo apt instal openssl libcurl4-openssl-dev
-  > ```
 - **[nmap-bootstrap-xsl](https://github.com/honze-net/nmap-bootstrap-xsl.git)**
+- ... _(list not complete)_
+
+## setups
+
+to install needed dependencies used in this wrapper-service
+you need to set env-variable `VM_SCRIPT_INSTALL` like:
+
+```sh
+$export VM_SCRIPT_INSTALL=yes
+```
+
+then the scripts under `./scripts/` will be run and install needed dependencies.
+
+> there will be also installed some tools not needed in this script, but usefull
+> for recon+ like _msfconsole_, ...
+
+### use install(ed) without root
+
+copy env-setup from `scripts/vm_recon_path.sh` into `~/.bashrc`, `~/.zshrc` or ...
+
+### nmap without root `(--privileged)`
+
+```sh
+$sudo setcap cap_net_raw,cap_net_admin,cap_net_bind_service+eip $(which nmap)
+```
 
 ## install
 
 ```sh
-$pip install .
+$python3 -m pip install .
+# $pip3 install .
 ```
 
-### DEBUG
+### DEBUG `(PREFERRED)`
 
 ```sh
-$python3 -m venv ./venv
-$source venv/bin/activate
-$pip install --editable .
+$mkdir -p "$HOME/.vm_recon"
+$python3 -m venv "$HOME/.vm_recon/venv"
+$source "$HOME/.vm_recon/venv/bin/activate"
+$python3 -m pip install -v -e .
+# $pip3 install -v --editable .
 ```
