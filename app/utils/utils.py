@@ -96,7 +96,8 @@ class Utils:
         if not is_init and LOGGING_LEVEL == logging.getLevelName(logging.DEBUG):
             print()
             print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-            logging.log(logging.DEBUG, f'LOGGING-LEVEL          : {bold(LOGGING_LEVEL)}')
+            logging.log(logging.DEBUG, f'LOGGING-LEVEL          : {bold(ctx.logging_level)}')
+            logging.log(logging.DEBUG, f'LOGGING-VERBOSE        : {bold(ctx.logging_verbose)}')
             logging.log(logging.DEBUG, f'DISABLED SPLIT PROJECT : {bold(self.ctx.disable_split_project)}')
             logging.log(logging.DEBUG, f'DISABLED SPLIT HOST    : {bold(self.ctx.disable_split_host)}')
             logging.log(logging.DEBUG, f'PRINT ONLY MODE        : {bold(self.ctx.print_only_mode)}')
@@ -254,15 +255,16 @@ class Utils:
                     if sub_p.stdout is not None:
                         sub_p_std = sub_p.stdout
                 else:
-                    logging.log(
-                        logging.INFO, 'you run in terminal read mode, some function can maybe not print anything and you will see longer no response, please wait ...')
-                    for stdout_line in sub_p.stdout:
-                        if stdout_line is not None and len(stdout_line) > 0:
-                            if sub_p_std is None:
-                                sub_p_std = stdout_line
-                            else:
-                                sub_p_std += stdout_line
-                            logging.log(logging.INFO, stdout_line.decode().replace('\n', ''))
+                    if sub_p.stdout is not None:
+                        logging.log(
+                            logging.INFO, 'you run in terminal read mode, some function can maybe not print anything and you will see longer no response, please wait ...')
+                        for stdout_line in sub_p.stdout:
+                            if stdout_line is not None and len(stdout_line) > 0:
+                                if sub_p_std is None:
+                                    sub_p_std = stdout_line
+                                else:
+                                    sub_p_std += stdout_line
+                                logging.log(logging.INFO, stdout_line.decode().replace('\n', ''))
             if sub_p.stderr is not None:
                 sub_p_err = sub_p.stderr
         except (SystemExit, KeyboardInterrupt):
