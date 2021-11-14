@@ -17,8 +17,7 @@ config_project = Config('.env_project')
 #
 # ------------------------------------------------------------------------------
 
-PROJECT_NAME: str = config_project('PROJECT_NAME')
-VERSION: str = config_project('VERSION')
+PROJECT_NAME: str = config_project('PROJECT_NAME', default='vm_recon')
 ENV_MODE: str = config('ENV_MODE', default='KONS')
 
 # NOTICE | SPAM | DEBUG | VERBOSE | INFO | NOTICE | WARNING | SUCCESS | ERROR | CRITICAL
