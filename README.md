@@ -13,14 +13,12 @@
     - [nmap without root `(--privileged)`](#nmap-without-root---privileged)
   - [install](#install)
     - [DEBUG `(PREFERRED)`](#debug-preferred)
-  - [code quality and git](#code-quality-and-git)
-    - [pre-commit](#pre-commit)
-    - [manual test run](#manual-test-run)
 
 ---
 
-A python wrapper to call recon services with predefined params.
-_python with `setup.py` and `click` for **cli**_
+A python wrapper to call recon-services with predefined params.
+
+_python with `setup.py` and `click` for **cli** recon base and default structured log saving_
 
 ## dependencies
 
@@ -43,16 +41,25 @@ _python with `setup.py` and `click` for **cli**_
 - **host**
 - **openssl**
 - **[nmap-bootstrap-xsl](https://github.com/honze-net/nmap-bootstrap-xsl.git)**
-- ...
+- ... _(list not complete)_
 
 ## setups
 
-on run `pip` `install`, it will run **setup script** under `./scripts`
-which will install dependencies and useful tools for recon+
+to install needed dependencies used in this wrapper-service
+you need to set env-variable `VM_SCRIPT_INSTALL` like:
+
+```sh
+$export VM_SCRIPT_INSTALL=yes
+```
+
+then the scripts under `./scripts/` will be run and install needed dependencies.
+
+> there will be also installed some tools not needed in this script, but usefull
+> for recon+ like _msfconsole_, ...
 
 ### use install(ed) without root
 
-copy ... from `scripts/vm_recon_path.sh` into `~/.bashrc` or `~/.zshrc`
+copy env-setup from `scripts/vm_recon_path.sh` into `~/.bashrc`, `~/.zshrc` or ...
 
 ### nmap without root `(--privileged)`
 
@@ -75,26 +82,4 @@ $python3 -m venv "$HOME/.vm_recon/venv"
 $source "$HOME/.vm_recon/venv/bin/activate"
 $python3 -m pip install -v -e .
 # $pip3 install -v --editable .
-```
-
----
-
-## code quality and git
-
-### pre-commit
-
-run:
-
-```sh
-$git config --local core.hooksPath .git/hooks
-$pre-commit install
-```
-
-### manual test run
-
-```sh
-$mypy app
-$flake8 app
-$pytest --cov=tests
-$tox
 ```

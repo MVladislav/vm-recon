@@ -30,7 +30,7 @@ except ImportError:
 
 PROJECT_NAME: str = os.getenv('PROJECT_NAME', 'vm_recon')
 VERSION: str = os.getenv('VERSION', '0.0.1')
-SCRIPT_INSTALL: bool = os.getenv('VM_SCRIPT_INSTALL', False)
+SCRIPT_INSTALL: str = os.getenv('VM_SCRIPT_INSTALL', 'no')
 
 
 def main():
@@ -73,7 +73,7 @@ class PostDevelopCommand(develop):
     '''
 
     def run(self):
-        if SCRIPT_INSTALL:
+        if isinstance(SCRIPT_INSTALL, str) and SCRIPT_INSTALL == 'yes':
             check_call(['/bin/bash', './scripts/setup-dev.sh'])
         develop.run(self)
 
@@ -84,7 +84,7 @@ class PostInstallCommand(install):
     '''
 
     def run(self):
-        if SCRIPT_INSTALL:
+        if isinstance(SCRIPT_INSTALL, str) and SCRIPT_INSTALL == 'yes':
             check_call(['/bin/bash', './scripts/setup.sh'])
         install.run(self)
 
