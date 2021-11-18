@@ -12,7 +12,7 @@ echo '* Copyright of MVladislav, 2021                                *'
 echo '* https://mvladislav.online                                    *'
 echo '* https://github.com/MVladislav                                *'
 echo '****************************************************************'
-echo '* KONS                                                         *'
+echo '* PROD                                                         *'
 echo '****************************************************************'
 echo ''
 
@@ -91,10 +91,10 @@ mkdir -p "$vm_prefix"
 mkdir -p "$vm_run"
 
 echo ''
-echo "init:: venv"
+echo "init:: py defaults"
 export PYTHONPATH=
-python3 -m venv "$vm_path/venv"
-source "$vm_path/venv/bin/activate"
+# curl https://bootstrap.pypa.io/get-pip.py -o "$vm_path_git/get-pip.py"
+# python3 "$vm_path_git/get-pip.py"
 python3 -m pip install --upgrade pip
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -150,31 +150,21 @@ export DESTDIR=""
 echo ''
 echo 'inst:: pip3:: services'
 pips_to_install=(
-  pip
   sqlmap
+  pywhat
+  emailfinder
+  python-libnmap
+  XlsxWriter
+  updog
+  #
   wfuzz
-  pyyaml
-  pymongo
-  requests
+  impacket
   s3recon
   fierce
   dnspython
-  argparse
-  ndg-httpsclient
-  python-masscan
-  aiodns
-  aiohttp
-  aiosqlite
-  plotly
-  aiomultiprocess
-  python-libnmap
-  XlsxWriter
-  pywhat
   pysmb
-  impacket
+  python-masscan
   pypykatz
-  updog
-  emailfinder
 )
 for pip_to_install in "${pips_to_install[@]}"; do
   echo "--> inst:: pip3:: ${pip_to_install}"
@@ -262,6 +252,10 @@ clone_or_pull_and_cd "https://github.com/sherlock-project/sherlock.git"
 python3 -m pip install -r requirements.txt
 ln -sf "$PWD/sherlock/sherlock.py" "$vm_run/sherlock"
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clone_or_pull_and_cd "https://github.com/novitae/sterraxcyl.git"
+python3 -m pip install .
+
 # other
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "https://github.com/slimm609/checksec.sh.git"
@@ -273,7 +267,7 @@ ln -sf "$PWD/enum4linux.pl" "$vm_run/enum4linux"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "git@github.com:offensive-security/exploitdb.git"
-ln -sf "$PWD/" "$vm_run/searchsploit"
+ln -sf "$PWD/searchsploit" "$vm_run/searchsploit"
 sed -i "s|\"/opt/exploitdb\"|\"${PWD}\"|g" "$PWD/.searchsploit_rc"
 sed -i "s|\"/opt/exploitdb-papers\"|\"${PWD}/../exploitdb-papers\"|g" "$PWD/.searchsploit_rc"
 cp "$PWD/.searchsploit_rc" "$HOME"

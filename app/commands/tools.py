@@ -1,5 +1,7 @@
 import logging
 import sys
+from enum import Enum
+from typing import Union
 
 import click
 
@@ -13,7 +15,7 @@ from ..utils.utils import Context, pass_context
 # ------------------------------------------------------------------------------
 
 
-@click.group(invoke_without_command=True)
+@click.group()
 @pass_context
 def cli(ctx: Context):
     '''
@@ -33,18 +35,20 @@ def cli(ctx: Context):
 
 
 @cli.command()
-@click.option('-w', '--what', type=click.Choice(list(map(str, DownloadWhat))), help='download a tool', required=True)
+@click.option('-w', '--what', type=click.Choice(list(map(lambda c: c.value, DownloadWhat))), help='download a tool', required=True)
 @pass_context
-def wget(ctx: Context, what):
-    '''DOWNLOAD'''
-    service: ToolService = ctx.service
+def wget(ctx: Context, what: DownloadWhat):
+    '''
+        DOWNLOAD
+    '''
     try:
+        service: ToolService = ctx.service
         service.download(what=what)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -57,11 +61,13 @@ def wget(ctx: Context, what):
 @cli.command()
 @click.option('-p', '--port', type=int, help='port to open on')
 @pass_context
-def nc(ctx: Context, port):
-    '''NC LISTENER'''
-    service: ToolService = ctx.service
+def nc(ctx: Context, port: Union[int, None]):
+    '''
+        NC LISTENER
+    '''
     try:
-        if port != None:
+        service: ToolService = ctx.service
+        if port is not None:
             service.nc(port=port)
         else:
             service.nc()
@@ -69,7 +75,7 @@ def nc(ctx: Context, port):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 
@@ -77,15 +83,17 @@ def nc(ctx: Context, port):
 @click.option('-d', '--host', type=str, help='host for self-inject')
 @click.option('-p', '--port', type=int, help='port for listen on and self-inject')
 @pass_context
-def pwncat(ctx: Context, host, port):
-    '''PWNCAT LISTENER'''
-    service: ToolService = ctx.service
+def pwncat(ctx: Context, host: Union[str, None], port: Union[int, None]):
+    '''
+        PWNCAT LISTENER
+    '''
     try:
-        if host != None and port != None:
+        service: ToolService = ctx.service
+        if host is not None and port is not None:
             service.pwncat(host=host, port=port)
-        elif host != None:
+        elif host is not None:
             service.pwncat(host=host)
-        elif port != None:
+        elif port is not None:
             service.pwncat(port=port)
         else:
             service.pwncat()
@@ -93,7 +101,7 @@ def pwncat(ctx: Context, host, port):
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
 # ------------------------------------------------------------------------------
@@ -108,14 +116,16 @@ def pwncat(ctx: Context, host, port):
 @click.option('-p', '--port', type=int, help='LPORT to connect back', required=True)
 @click.option('-f', '--format', type=click.Choice(['dll', 'exe']), help='what file type to create [dll]', default='dll')
 @pass_context
-def msfvenom(ctx: Context, host, port, format):
-    '''MSFVENOM creator'''
-    service: ToolService = ctx.service
+def msfvenom(ctx: Context, host: str, port: int, format: str):
+    '''
+        MSFVENOM creator
+    '''
     try:
+        service: ToolService = ctx.service
         service.msfvenom(host=host, port=port, format=format)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)

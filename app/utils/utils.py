@@ -113,24 +113,41 @@ class Utils:
     # --------------------------------------------------------------------------
 
     def create_folder(self, path: str) -> None:
+        '''
+            create a folder under giving path
+        '''
         Path(path).mkdir(parents=True, exist_ok=True, mode=0o700)
 
     def get_user_path(self) -> str:
+        '''
+            returns path to user home
+        '''
         return str(Path.home())
 
-    def create_service_folder(self, name: str, host: Union[str, None] = None) -> str:
-        path = f'{self.create_service_path(host)}/{name}'
+    def create_service_folder(self, name: Union[str, None] = None, host: Union[str, None] = None, split_host=None, split_project=None) -> str:
+        '''
+            creates a folder with name optional host under base path
+        '''
+        path = self.create_service_path(host=host,
+                                        split_host=split_host, split_project=split_project)
+        path = f'{path}/{name}' if name is not None else path
         self.create_folder(path)
         logging.log(logging.DEBUG, f'new folder created:: {path}')
         return path
 
-    def create_service_path(self, host: Union[str, None] = None):
-        if not self.ctx.disable_split_host and host is not None:
+    def create_service_path(self, host: Union[str, None] = None, split_host=None, split_project=None) -> str:
+        '''
+            creates a path name, will used in call by "create_service_folder"
+        '''
+        split_host = not self.ctx.disable_split_host if split_host is None else split_host
+        split_project = not self.ctx.disable_split_project if split_project is None else split_project
+
+        if split_host and host is not None:
             host = self.slugify(host)
             host = '' if host is None else f'/{host}'
         else:
             host = ''
-        if not self.ctx.disable_split_project:
+        if split_project:
             project = '' if self.ctx.project is None else f'/{self.ctx.project}'
         else:
             project = ''
@@ -153,14 +170,20 @@ class Utils:
             index_to_check = 0
             index_to_check = 1 if command_list[index_to_check] == 'sudo' else index_to_check
 
+            # if sudo is in command, first check into root
+            if index_to_check == 1:
+                if self.prompt_sudo() != 0:
+                    sys.exit(4)
+
+            logging.log(verboselogs.NOTICE, ' '.join(command_list))
+
             if self.is_tool(command_list[index_to_check]):
                 with Popen(command_list) as sub_p:
                     while is_running:
                         time.sleep(600)
             else:
                 logging.log(logging.ERROR, f'the command "{command_list[index_to_check]}", did not exist')
-        # termination with Ctrl+C
-        except KeyboardInterrupt as k:
+        except (SystemExit, KeyboardInterrupt) as k:
             logging.log(logging.WARNING, f'process interupted! ({k})')
         except Exception as e:
             logging.log(logging.CRITICAL, e, exc_info=True)
@@ -177,7 +200,7 @@ class Utils:
         except Exception:
             pass
 
-    def run_command(self, command_list: List[str] = [], input_value: Union[str, None] = None,
+    def run_command(self, command_list: List[str] = [], input_value: Union[str, None] = None
                     ) -> Tuple[Union[str, None], Union[str, None], bool]:
         sub_std_res: Union[str, None] = None
         sub_err_res: Union[str, None] = None

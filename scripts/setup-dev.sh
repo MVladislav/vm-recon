@@ -360,7 +360,7 @@ ln -sf "$PWD/enum4linux.pl" "$vm_run/enum4linux"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clone_or_pull_and_cd "git@github.com:offensive-security/exploitdb.git"
-ln -sf "$PWD/" "$vm_run/searchsploit"
+ln -sf "$PWD/searchsploit" "$vm_run/searchsploit"
 sed -i "s|\"/opt/exploitdb\"|\"${PWD}\"|g" "$PWD/.searchsploit_rc"
 sed -i "s|\"/opt/exploitdb-papers\"|\"${PWD}/../exploitdb-papers\"|g" "$PWD/.searchsploit_rc"
 cp "$PWD/.searchsploit_rc" "$HOME"
