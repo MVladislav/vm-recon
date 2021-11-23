@@ -1,4 +1,5 @@
 *
+!.gitempty
 !.git/
 !.git/**
 !.github/
@@ -11,6 +12,7 @@
 !scripts/**
 !tests/
 !tests/**
+!logs/
 
 !.dockerignore
 !.env_project
