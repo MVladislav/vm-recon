@@ -10,6 +10,4 @@ validators
 maxminddb
 requests
 types-requests
-
 pyyaml
-# python-libnmap

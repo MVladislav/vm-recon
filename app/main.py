@@ -4,7 +4,7 @@ import os
 import click
 
 from .utils.config import (BASE_PATH, LOGGING_LEVEL, LOGGING_VERBOSE,
-                           PROJECT_NAME)
+                           PROJECT_NAME, VERSION)
 from .utils.logHelper import LogHelper
 from .utils.utils import Context, Utils, pass_context
 
@@ -64,6 +64,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'], ignore_unknown_optio
 
 
 @click.command(cls=ComplexCLI, context_settings=CONTEXT_SETTINGS)
+@click.version_option(VERSION)
 @click.option('-v', '--verbose', count=True,
               help=f'Enables verbose mode [{LOGGING_VERBOSE}]', default=LOGGING_VERBOSE)
 @click.option('-l', '--logging-level',

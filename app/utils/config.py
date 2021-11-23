@@ -18,9 +18,10 @@ config_project = Config('.env_project')
 # ------------------------------------------------------------------------------
 
 PROJECT_NAME: str = config_project('PROJECT_NAME', default='vm_recon')
+VERSION: str = config_project('VERSION', default='0.0.2')
 ENV_MODE: str = config('ENV_MODE', default='KONS')
 
-# NOTICE | SPAM | DEBUG | VERBOSE | INFO | NOTICE | WARNING | SUCCESS | ERROR | CRITICAL
+# CRITICAL | ERROR | SUCCESS | WARNING | NOTICE | INFO | VERBOSE | DEBUG | SPAM | NOTSET
 LOGGING_LEVEL: str = config('LOGGING_LEVEL',  default='DEBUG')
 LOGGING_VERBOSE: int = config('LOGGING_VERBOSE', cast=int,  default=0)
 DEBUG: bool = True if LOGGING_LEVEL == 'DEBUG' or \
