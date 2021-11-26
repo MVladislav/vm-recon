@@ -11,3 +11,4 @@ maxminddb
 requests
 types-requests
 pyyaml
+scapy

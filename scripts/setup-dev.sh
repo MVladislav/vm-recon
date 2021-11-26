@@ -172,6 +172,7 @@ cmds_to_install=(
   'https://salsa.debian.org/debian/openssl.git openssl'
   'https://salsa.debian.org/dns-team/bind9.git dig'
   'https://salsa.debian.org/xml-sgml-team/libxslt.git xsltproc'
+  'https://salsa.debian.org/debian/wireshark.git wireshark'
 )
 
 # # for to_install in "${cmds_to_install[@]}"; do

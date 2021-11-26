@@ -34,16 +34,18 @@ def cli(ctx: Context):
 
 
 @cli.command()
+@click.option('-n', '--net', type=str, help='network range like 192.168.0.0/24', required=True)
 @pass_context
-def test(ctx: Context):
-    '''TEST scan'''
-    service: WiFiService = ctx.service
+def scapy_arp(ctx: Context, net: str):
+    '''
+        Scapy ARP
+    '''
     try:
-        logging.log(logging.DEBUG, service.find_nic())
-        # service.<...>
+        service: WiFiService = ctx.service
+        service.scapy_arp(net)
     except KeyboardInterrupt as k:
         logging.log(logging.DEBUG, f"process interupted! ({k})")
         sys.exit(5)
     except Exception as e:
-        logging.log(logging.CRITICAL, e)
+        logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
