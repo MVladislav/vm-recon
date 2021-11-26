@@ -14,6 +14,7 @@ from ..utils.config import (GEO_LICENSE_KEY, SECRET_CENSYS_SECRET,
                             SECRET_SHODAN_API_KEY)
 from ..utils.defaultLogBanner import log_runBanner
 from ..utils.utils import Context, Utils
+from ..utils.utilsHelper import uri_validator
 
 # from libnmap.objects.host import NmapHost
 # from libnmap.objects.report import NmapReport
@@ -92,7 +93,7 @@ class HackService:
 
         # some function need a valid url, check it first
         if mode == 'hakrawler' and domain is not None:
-            if not self.utils.uri_validator(domain):
+            if not uri_validator(domain):
                 logging.log(logging.WARNING, f'domain "{domain}" is not valid')
                 sys.exit(2)
 

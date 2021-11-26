@@ -7,6 +7,7 @@ import verboselogs
 
 from ..utils.defaultLogBanner import log_runBanner
 from ..utils.utils import Context, Utils
+from ..utils.utilsHelper import get_ip_address
 
 # ------------------------------------------------------------------------------
 #
@@ -139,7 +140,7 @@ class ToolService:
         path = self.utils.create_service_folder('tool/pwncat')
 
         if host is None:
-            host = self.utils.get_ip_address()
+            host = get_ip_address()
         if host is not None:
             use_sudo = []
             options_port = []

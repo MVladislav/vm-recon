@@ -82,7 +82,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'], ignore_unknown_optio
 @click.option('-dsh', '--disable-split-host', is_flag=True,
               help='disable splitting folder struct by host [false]')
 @click.option('-pom', '--print-only-mode', is_flag=True,
-              help='command will only printed and not run [false]')
+              help='command will only printed and not run (not work for everythin) [false]')
 @click.option('-s', '--sudo', is_flag=True,
               help='append sudo for command which need it [false]')
 @click.option('-t', '--terminal-read-mode', is_flag=True,
