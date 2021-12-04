@@ -307,8 +307,7 @@ for npm_to_install in "${npms_to_install[@]}"; do
 done
 
 # make
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-clone_or_pull_and_cd "git@github.com:nmap/nmap.git"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~cd
 ./configure --prefix "$vm_prefix"
 make
 make install

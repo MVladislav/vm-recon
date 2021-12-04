@@ -218,7 +218,7 @@ done
 
 # make
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-clone_or_pull_and_cd "git@github.com:nmap/nmap.git"
+clone_or_pull_and_cd "https://github.com/nmap/nmap.git"
 ./configure --prefix "$vm_prefix"
 make
 make install
