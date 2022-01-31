@@ -15,10 +15,13 @@ class LoggingMsgType(Enum):
 def loggingMsgHandler(type: Union[LoggingMsgType, None]) -> Union[str, None]:
     if type == LoggingMsgType.NOT_EMPTY:
         return "the value is not empty"
+
     elif type == LoggingMsgType.EMPTY:
         return "the value is empty"
+
     elif type == LoggingMsgType.EXCEPTION:
         return "internal error appears"
+
     return None
 
 
@@ -29,7 +32,6 @@ class LogHelper:
     #
     #
     # --------------------------------------------------------------------------
-
     def __init__(self, logging_verbose: int = 2, logging_level: str = 'DEBUG'):
         # configure logger for requested verbosity
         if logging_verbose >= 4:
@@ -45,12 +47,11 @@ class LogHelper:
             log_format = '%(message)s'
         elif logging_verbose < 0:
             log_format = '%(message)s'
-
         # create a log objectfrom verboselogs
         verboselogs.install()
-
-        for logger_name in [logging.getLogger()] + \
-                [logging.getLogger(name) for name in logging.root.manager.loggerDict]:
+        for logger_name in [logging.getLogger()] + [
+            logging.getLogger(name) for name in logging.root.manager.loggerDict
+        ]:
             for handler in logger_name.handlers:
                 logger_name.removeHandler(handler)
             # # define an handle
@@ -61,8 +62,9 @@ class LogHelper:
             coloredlogs.install(
                 level=logging.getLevelName(logging_level),
                 fmt=log_format,
-                logger=logger_name
+                logger=logger_name,
             )
 
-        # # add colered logs
-        # coloredlogs.install(level=logging.getLevelName(logging_level), fmt=log_format)
+
+# # add colered logs
+# coloredlogs.install(level=logging.getLevelName(logging_level), fmt=log_format)

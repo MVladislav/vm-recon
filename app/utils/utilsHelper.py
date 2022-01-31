@@ -9,18 +9,17 @@ from subprocess import check_call
 from typing import Any, List, Union
 from urllib.parse import urlparse
 
+
 # --------------------------------------------------------------------------
 #
 #
 #
 # --------------------------------------------------------------------------
-
-
 def group(flat: List[Any], size: int) -> List[Any]:
     '''
         group list a flat list into a matrix of "size"
     '''
-    return [flat[i:i+size] for i in range(0, len(flat), size)]
+    return [flat[i: i + size] for i in range(0, len(flat), size)]
 
 
 def normalize_caseless(text: str) -> str:
@@ -38,17 +37,20 @@ def slugify(value: Union[str, None], allow_unicode: bool = False) -> Union[str, 
     if allow_unicode:
         value = unicodedata.normalize('NFKC', value)
     else:
-        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode(
+            'ascii'
+        )
     value = re.sub(r'[^\w\s-]', '', value.lower())
     return re.sub(r'[-\s]+', '-', value).strip('-_')
 
 
-# --------------------------------------------------------------------------
-#
-#
-#
-# --------------------------------------------------------------------------
 
+
+# --------------------------------------------------------------------------
+#
+#
+#
+# --------------------------------------------------------------------------
 def in_sudo_mode() -> None:
     '''
         If the user doesn't run the program with super user privileges, don't allow them to continue.
@@ -69,8 +71,10 @@ def prompt_sudo() -> bool:
         if os.geteuid() != 0:
             msg = 'you run service with "-s" in "sudo" mode, you need enter sudo password to use some functions\n--> [sudo] password for %u: '
             return check_call(f'sudo -v -p "{msg}"', shell=True) == 0
+
         else:
             return True
+
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
     return False
@@ -82,13 +86,14 @@ def is_tool(name: str) -> bool:
     '''
     return which(name) is not None
 
+
+
+
 # --------------------------------------------------------------------------
 #
 #
 #
 # --------------------------------------------------------------------------
-
-
 def get_ip_address() -> Union[str, None]:
     IP: Union[str, None] = None
     try:
@@ -107,6 +112,7 @@ def uri_validator(url: str) -> Union[str, None]:
         result = urlparse(url)
         if all([result.scheme, result.netloc]):
             return url
+
     except Exception as e:
         logging.log(logging.WARNING, e)
     return None

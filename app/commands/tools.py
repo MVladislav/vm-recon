@@ -1,6 +1,5 @@
 import logging
 import sys
-from enum import Enum
 from typing import Union
 
 import click
@@ -8,13 +7,12 @@ import click
 from ..service.tool_service import DownloadWhat, ToolService
 from ..utils.utils import Context, pass_context
 
+
 # ------------------------------------------------------------------------------
 #
 #
 #
 # ------------------------------------------------------------------------------
-
-
 @click.group()
 @pass_context
 def cli(ctx: Context):
@@ -27,15 +25,23 @@ def cli(ctx: Context):
     else:
         logging.log(logging.ERROR, f'utils are not set')
         sys.exit(1)
+
+
+
+
 # ------------------------------------------------------------------------------
 #
 #
 #
 # ------------------------------------------------------------------------------
-
-
 @cli.command()
-@click.option('-w', '--what', type=click.Choice(list(map(lambda c: c.value, DownloadWhat))), help='download a tool', required=True)
+@click.option(
+    '-w',
+    '--what',
+    type=click.Choice(list(map( lambda c: c.value, DownloadWhat))),
+    help='download a tool',
+    required=True,
+)
 @pass_context
 def wget(ctx: Context, what: DownloadWhat):
     '''
@@ -51,13 +57,14 @@ def wget(ctx: Context, what: DownloadWhat):
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
+
+
+
 # ------------------------------------------------------------------------------
 #
 #
 #
 # ------------------------------------------------------------------------------
-
-
 @cli.command()
 @click.option('-p', '--port', type=int, help='port to open on')
 @pass_context
@@ -104,17 +111,24 @@ def pwncat(ctx: Context, host: Union[str, None], port: Union[int, None]):
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
 
+
+
+
 # ------------------------------------------------------------------------------
 #
 #
 #
 # ------------------------------------------------------------------------------
-
-
 @cli.command()
 @click.option('-d', '--host', type=str, help='LHOST to connect back', required=True)
 @click.option('-p', '--port', type=int, help='LPORT to connect back', required=True)
-@click.option('-f', '--format', type=click.Choice(['dll', 'exe']), help='what file type to create [dll]', default='dll')
+@click.option(
+    '-f',
+    '--format',
+    type=click.Choice(['dll', 'exe']),
+    help='what file type to create [dll]',
+    default='dll',
+)
 @pass_context
 def msfvenom(ctx: Context, host: str, port: int, format: str):
     '''

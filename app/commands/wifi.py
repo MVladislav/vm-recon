@@ -6,13 +6,12 @@ import click
 from ..service.wifi_service import WiFiService
 from ..utils.utils import Context, pass_context
 
+
 # ------------------------------------------------------------------------------
 #
 #
 #
 # ------------------------------------------------------------------------------
-
-
 @click.group(invoke_without_command=True)
 @pass_context
 def cli(ctx: Context):
@@ -26,15 +25,18 @@ def cli(ctx: Context):
         logging.log(logging.ERROR, f'utils are not set')
         sys.exit(1)
 
+
+
+
 # ------------------------------------------------------------------------------
 #
 #
 #
 # ------------------------------------------------------------------------------
-
-
 @cli.command()
-@click.option('-n', '--net', type=str, help='network range like 192.168.0.0/24', required=True)
+@click.option(
+    '-n', '--net', type=str, help='network range like 192.168.0.0/24', required=True
+)
 @pass_context
 def scapy_arp(ctx: Context, net: str):
     '''
