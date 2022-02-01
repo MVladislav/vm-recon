@@ -29,7 +29,6 @@ except ImportError:
         logging.log(logging.CRITICAL, '[FAIL]')
 
 PROJECT_NAME: str = os.getenv('PROJECT_NAME', 'vm_recon')
-VERSION: str = os.getenv('VERSION', '0.0.2')
 SCRIPT_INSTALL: str = os.getenv('VM_SCRIPT_INSTALL', 'no')
 
 

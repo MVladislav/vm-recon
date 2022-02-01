@@ -1,6 +1,6 @@
 [project]
 name = "vm_recon"
-version = "0.0.2"
+version = "0.0.3"
 description = "vm_recon"
 authors = ["MVladislav <info@mvladislav.online>"]
 license = "GNU AGPLv3"
