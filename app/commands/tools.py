@@ -5,7 +5,7 @@ from typing import Union
 import click
 
 from ..service.tool_service import DownloadWhat, ToolService
-from ..utils.utils import Context, pass_context
+from ..utils.utilsHelper import Context, pass_context
 
 
 # ------------------------------------------------------------------------------
@@ -20,13 +20,30 @@ def cli(ctx: Context):
         A wrapper for tool services
         with predefined params
     '''
-    if ctx.utils is not None:
-        ctx.service = ToolService(ctx)
-    else:
-        logging.log(logging.ERROR, f'utils are not set')
-        sys.exit(1)
+    ctx.service = ToolService()
 
 
+# ------------------------------------------------------------------------------
+#
+#
+#
+# ------------------------------------------------------------------------------
+@cli.command()
+@click.option('-d', '--host', type=str, help='host for geo resolution')
+@pass_context
+def geo(ctx: Context, host: str):
+    '''
+        DOWNLOAD
+    '''
+    try:
+        service: ToolService = ctx.service
+        service.geo(host=host)
+    except KeyboardInterrupt as k:
+        logging.log(logging.DEBUG, f"process interupted! ({k})")
+        sys.exit(5)
+    except Exception as e:
+        logging.log(logging.CRITICAL, e, exc_info=True)
+        sys.exit(2)
 
 
 # ------------------------------------------------------------------------------
@@ -38,7 +55,7 @@ def cli(ctx: Context):
 @click.option(
     '-w',
     '--what',
-    type=click.Choice(list(map( lambda c: c.value, DownloadWhat))),
+    type=click.Choice(list(map(lambda c: c.value, DownloadWhat))),
     help='download a tool',
     required=True,
 )
@@ -56,8 +73,6 @@ def wget(ctx: Context, what: DownloadWhat):
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
-
-
 
 
 # ------------------------------------------------------------------------------
@@ -110,8 +125,6 @@ def pwncat(ctx: Context, host: Union[str, None], port: Union[int, None]):
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
-
-
 
 
 # ------------------------------------------------------------------------------

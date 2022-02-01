@@ -9,7 +9,8 @@ import scapy.all as scapy
 from scapy.layers.l2 import ARP, arping
 from scapy.plist import PacketList
 
-from .utils import Utils
+from ..utils.utilsProcessHelper import run_command_output_loop
+from .config import settings
 
 
 # ------------------------------------------------------------------------------
@@ -22,8 +23,8 @@ class UtilsWifi:
     mac_address_regex = re.compile(r'(?:[0-9a-fA-F]:?){12}')
     wlan_code = re.compile('Interface (wlan[0-9]+|wlp[0-9]+s[0-9]+)')
 
-    def __init__(self, utils: Utils):
-        self.utils = utils
+    def __init__(self):
+        pass
 
 
     # --------------------------------------------------------------------------
@@ -42,13 +43,13 @@ class UtilsWifi:
 
     def activate_ip_forwarding(self) -> bool:
         try:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 'activate ip forward (1/2)',
-                [self.utils.ctx.use_sudo + ['sysctl', '-w', 'net.ipv4.ip_forward=1']],
+                [settings.USE_SUDO + ['sysctl', '-w', 'net.ipv4.ip_forward=1']],
             )
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 'activate ip forward (2/2)',
-                [self.utils.ctx.use_sudo + ['sysctl', '-p', '/etc/sysctl.conf']],
+                [settings.USE_SUDO + ['sysctl', '-p', '/etc/sysctl.conf']],
             )
             return True
 
@@ -58,13 +59,13 @@ class UtilsWifi:
 
     def deactivate_ip_forwarding(self) -> bool:
         try:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 'deactivate ip forward (1/2)',
-                [self.utils.ctx.use_sudo + ['sysctl', '-w', 'net.ipv4.ip_forward=0']],
+                [settings.USE_SUDO + ['sysctl', '-w', 'net.ipv4.ip_forward=0']],
             )
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 'deactivate ip forward (2/2)',
-                [self.utils.ctx.use_sudo + ['sysctl', '-p', '/etc/sysctl.conf']],
+                [settings.USE_SUDO + ['sysctl', '-p', '/etc/sysctl.conf']],
             )
             return True
 
@@ -85,11 +86,7 @@ class UtilsWifi:
         '''
         # We send arp packets through the network, verbose is set to 0 so it won't show any output.
         # scapy's arping function returns two lists. We're interested in the answered results which is at the 0 index.
-        ans: Union[List[Any], None] = arping(
-            net, verbose=self.utils.ctx.logging_verbose
-        )[
-            0
-        ]
+        ans: Union[List[Any], None] = arping(net, verbose=settings.LOGGING_VERBOSE)[0]
         if ans is not None:
             return [{'ip': res[1].psrc, 'mac': res[1].hwsrc} for res in ans]
 
@@ -102,8 +99,8 @@ class UtilsWifi:
             @arp_res is output from scan_arp
         '''
         # We run route -n and capture the output
-        result: Union[str, List[str], None] = self.utils.run_command_output_loop(
-            'gateway info', [self.utils.ctx.use_sudo + ['route', '-n']]
+        result: Union[str, List[str], None] = run_command_output_loop(
+            'gateway info', [settings.USE_SUDO + ['route', '-n']]
         )
         if result is not None and isinstance(result, str):
             result = result.split('\n')
@@ -293,8 +290,8 @@ class UtilsWifi:
             This function is used to find the network interface controllers on your computer.
         '''
         # We use the subprocess.run to run the 'sudo iw dev' command we'd normally run to find the network interfaces.
-        result = self.utils.run_command_output_loop(
-            'find nic', [self.utils.ctx.use_sudo + ['iw', 'dev']]
+        result = run_command_output_loop(
+            'find nic', [settings.USE_SUDO + ['iw', 'dev']]
         )
         if result is not None:
             network_interface_controllers = self.wlan_code.findall(result)
@@ -309,24 +306,23 @@ class UtilsWifi:
         '''
         # Put WiFi controller into monitor mode.
         # This is one way to put it into monitoring mode. You can also use iwconfig, or airmon-ng.
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'monitor mode (down)',
-            [self.utils.ctx.use_sudo + ['ip', 'link', 'set', wifi_name, 'down']],
+            [settings.USE_SUDO + ['ip', 'link', 'set', wifi_name, 'down']],
         )
         # Killing conflicting processes makes sure that nothing interferes with putting controller into monitor mode.
-        self.utils.run_command_output_loop(
-            'monitor mode (kill)',
-            [self.utils.ctx.use_sudo + ['airmon-ng', 'check', 'kill']],
+        run_command_output_loop(
+            'monitor mode (kill)', [settings.USE_SUDO + ['airmon-ng', 'check', 'kill']]
         )
         # Put the WiFi nic in monitor mode.
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'monitor mode (set)',
-            [self.utils.ctx.use_sudo + ['iw', wifi_name, 'set', 'monitor', 'none']],
+            [settings.USE_SUDO + ['iw', wifi_name, 'set', 'monitor', 'none']],
         )
         # Bring the WiFi controller back online.
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'monitor mode (up)',
-            [self.utils.ctx.use_sudo + ['ip', 'link', 'set', wifi_name, 'up']],
+            [settings.USE_SUDO + ['ip', 'link', 'set', wifi_name, 'up']],
         )
 
     def set_band_to_monitor(self, choice: int, wifi_name: str) -> None:
@@ -335,10 +331,10 @@ class UtilsWifi:
         '''
         if choice == 0:
             # Bands b and g are 2.4Ghz WiFi Networks
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 'band (bg)',
                 [
-                    self.utils.ctx.use_sudo +
+                    settings.USE_SUDO +
                     [
                         'airodump-ng',
                         '--band',
@@ -355,10 +351,10 @@ class UtilsWifi:
             )
         elif choice == 1:
             # Band a is for 5Ghz WiFi Networks
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 'band (a)',
                 [
-                    self.utils.ctx.use_sudo +
+                    settings.USE_SUDO +
                     [
                         'airodump-ng',
                         '--band',
@@ -375,10 +371,10 @@ class UtilsWifi:
             )
         else:
             # Will use bands a, b and g (actually band n). Checks full spectrum.
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 'band (abg)',
                 [
-                    self.utils.ctx.use_sudo +
+                    settings.USE_SUDO +
                     [
                         'airodump-ng',
                         '--band',
@@ -401,20 +397,20 @@ class UtilsWifi:
         '''
         # Put WiFi controller into monitor mode.
         # This is one way to put it into managed mode. You can also use iwconfig, or airmon-ng.
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'manage mode (down',
-            [self.utils.ctx.use_sudo + ['ip', 'link', 'set', wifi_name, 'down']],
+            [settings.USE_SUDO + ['ip', 'link', 'set', wifi_name, 'down']],
         )
         # Put the WiFi nic in monitor mode.
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'manage mode (set)',
-            [self.utils.ctx.use_sudo + ['iwconfig', wifi_name, 'mode', 'managed']],
+            [settings.USE_SUDO + ['iwconfig', wifi_name, 'mode', 'managed']],
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'manage mode (up)',
-            [self.utils.ctx.use_sudo + ['ip', 'link', 'set', wifi_name, 'up']],
+            [settings.USE_SUDO + ['ip', 'link', 'set', wifi_name, 'up']],
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'manage mode (start)',
-            [self.utils.ctx.use_sudo + ['service', 'NetworkManager', 'start']],
+            [settings.USE_SUDO + ['service', 'NetworkManager', 'start']],
         )

@@ -3,15 +3,15 @@
 '''
 
 import logging
-import sys
 from multiprocessing.context import Process
 from typing import Union
 
 import verboselogs
 
 from ..utils.defaultLogBanner import log_runBanner
-from ..utils.utils import Context, Utils
+from ..utils.utilsFolderHelper import create_service_folder
 from ..utils.utilsHelper import prompt_sudo
+from ..utils.utilsProcessHelper import run_command_output_loop
 from ..utils.utilsWifi import UtilsWifi
 
 
@@ -27,17 +27,11 @@ class WiFiService:
     #
     #
     # --------------------------------------------------------------------------
-    def __init__(self, ctx: Context):
+    def __init__(self):
         '''
             wifi service
         '''
-        if ctx is not None and ctx.utils is not None:
-            self.ctx: Context = ctx
-            self.utils: Utils = ctx.utils
-            logging.log(logging.DEBUG, 'wifi-service is initiated')
-        else:
-            logging.log(logging.ERROR, 'context or utils are not set')
-            sys.exit(1)
+        logging.log(logging.DEBUG, 'wifi-service is initiated')
 
 
     # --------------------------------------------------------------------------
@@ -46,7 +40,7 @@ class WiFiService:
     #
     # --------------------------------------------------------------------------
     def get_clients(self, hackbssid, hackchannel, wifi_name):
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'get clients',
             [
                 [
@@ -69,7 +63,7 @@ class WiFiService:
     def deauth_attack(self, network_mac, target_mac, interface):
         # We are using aireplay-ng to send a deauth packet. 0 means it will send it indefinitely. -a is used to specify the MAC address of the target router. -c is used to specify the mac we want to send the deauth packet.
         # Then we also need to specify the interface
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'deauth atack',
             [
                 [
@@ -87,7 +81,7 @@ class WiFiService:
 
     def run_airmon(self, wifi_name, hackchannel):
         # Make sure that airmon-ng is running on the correct channel.
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'run airmon', [["airmon-ng", "start", wifi_name, hackchannel]]
         )
 
@@ -104,15 +98,15 @@ class WiFiService:
         '''
         service_name: str = 'SCAPY_ARP'
         log_runBanner(service_name)
-        path = self.utils.create_service_folder(f'wifi/arp', net)
+        path = create_service_folder(f'wifi/arp', net)
         utilsWifi: Union[UtilsWifi, None] = None
         t1: Union[Process, None] = None
-        pcap_filename: str = None
+        pcap_filename: Union[str, None] = None
         try:
             if not prompt_sudo():
                 raise KeyboardInterrupt("not in sudo mode")
 
-            utilsWifi = UtilsWifi(self.utils)
+            utilsWifi = UtilsWifi()
             if not utilsWifi.validate_ip(net):
                 logging.log(logging.WARNING, "No valid ip range specified")
             else:
@@ -173,7 +167,7 @@ class WiFiService:
         except Exception as e:
             logging.log(logging.CRITICAL, e, exc_info=True)
         if pcap_filename is not None:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 'pcap tcpflow',
                 [['tcpflow', '-r', f'{path}/{pcap_filename}.pcap', '-o', path]],
             )

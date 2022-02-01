@@ -5,21 +5,15 @@ import sys
 from pathlib import Path
 from typing import Any, List, Union
 
+import validators
 import verboselogs
 import yaml
 
-import validators
-
-from ..utils.config import (
-    GEO_LICENSE_KEY,
-    SECRET_CENSYS_SECRET,
-    SECRET_CENSYS_USERNAME,
-    SECRET_INSTAGRAM_SSID,
-    SECRET_SHODAN_API_KEY,
-)
+from ..utils.config import settings
 from ..utils.defaultLogBanner import log_runBanner
-from ..utils.utils import Context, Utils
-from ..utils.utilsHelper import uri_validator
+from ..utils.utilsFolderHelper import create_service_folder, get_user_path
+from ..utils.utilsHelper import geo, uri_validator
+from ..utils.utilsProcessHelper import run_command_output_loop
 
 # from libnmap.objects.host import NmapHost
 # from libnmap.objects.report import NmapReport
@@ -35,35 +29,29 @@ default_split_by: str = ','
 # ------------------------------------------------------------------------------
 class HackService:
 
-    def __init__(self, ctx: Context):
+    def __init__(self):
         '''
             hack service
         '''
-        if ctx is not None and ctx.utils is not None:
-            self.ctx: Context = ctx
-            self.utils: Utils = ctx.utils
-            logging.log(logging.DEBUG, 'hack-service is initiated')
-        else:
-            logging.log(logging.ERROR, 'context or utils are not set')
-            sys.exit(1)
-
+        logging.log(logging.DEBUG, 'hack-service is initiated')
 
     # --------------------------------------------------------------------------
     #
     #
     #
     # --------------------------------------------------------------------------
+
     def clone_page(self, host: str, ssl_verify: bool = True) -> None:
         '''
             ...
         '''
         service_name: str = 'page cloner'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'page', host)
+        path: str = create_service_folder(f'page', host)
         options = []
         if ssl_verify is False:
             options.append('--no-check-certificate')
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             f'clone page {host}',
             [
                 ['wget', '-r', '-nHp', host, '-P', path] + options,
@@ -75,12 +63,12 @@ class HackService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
     def recon(
         self,
         domain: Union[str, None],
@@ -109,12 +97,12 @@ class HackService:
                 sys.exit(2)
         service_name: str = 'RECON'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'scan/recon', domain)
+        path: str = create_service_folder(f'scan/recon', domain)
         # set/create conf file for subfinder and censys
         sources = []
         if mode == 'subfinder' or mode == 'censys':
             logging.log(logging.DEBUG, 'Create subfinder conf with keys...')
-            subfinder_config_path: str = f'{self.utils.get_user_path()}/.config/subfinder'
+            subfinder_config_path: str = f'{get_user_path()}/.config/subfinder'
             subfinder_config_file = 'config.yaml'
             # sources.append('bufferover')
             # sources.append('sitedossier')
@@ -138,8 +126,10 @@ class HackService:
                 'sources': sources,
                 'all-sources': sources,
                 'recursive': sources,
-                'censys': [f'{SECRET_CENSYS_USERNAME}:{SECRET_CENSYS_SECRET}'],
-                'shodan': [f'{SECRET_SHODAN_API_KEY}'],
+                'censys': [
+                    f'{settings.SECRET_CENSYS_USERNAME}:{settings.SECRET_CENSYS_SECRET}'
+                ],
+                'shodan': [f'{settings.SECRET_SHODAN_API_KEY}'],
                 # 'virustotal': [f'{TODO}'],
                 # 'passivetotal': [f'{TODO},{TODO}'],
                 # 'securitytrails': [f'{TODO}'],
@@ -176,7 +166,7 @@ class HackService:
             ','.join(sources),
         ]
         if mode == 'gospider' and domain is not None:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 f'recon {mode}',
                 [
                     [
@@ -196,13 +186,14 @@ class HackService:
                 ],
             )
         elif mode == 'hakrawler' and domain is not None:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 f'recon {mode}',
-                [['echo', domain], ['hakrawler', '-d', str(depth), '-subs', '-t', str(threads), '-insecure'], ['tee', f'{path}/hakrawler.log']],
+                [['echo', domain], ['hakrawler', '-d', str(depth), '-subs', '-t',
+                                    str(threads), '-insecure'], ['tee', f'{path}/hakrawler.log']],
                 # -h 'Cookie: foo=bar;Authorization: token'
             )
         elif mode == 'subfinder' and domain is not None:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 f'recon {mode}',
                 [
                     [
@@ -220,7 +211,7 @@ class HackService:
                 ],
             )
         elif mode == 'subfinder_api' and domain is not None:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 f'recon {mode}',
                 [
                     [
@@ -237,7 +228,7 @@ class HackService:
                 ],
             )
         elif mode == 'amass_whois' and domain is not None:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 f'recon {mode}',
                 [
                     [
@@ -255,7 +246,7 @@ class HackService:
                 ],
             )
         elif mode == 'amass_org' and org is not None:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 f'recon {mode}',
                 [
                     [
@@ -272,7 +263,7 @@ class HackService:
                 ],
             )
         elif mode == 'passive' and domain is not None:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 f'recon {mode}',
                 [
                     [
@@ -290,7 +281,7 @@ class HackService:
                 ],
             )
         elif mode == 'active' and domain is not None:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 f'recon {mode}',
                 [
                     [
@@ -313,7 +304,7 @@ class HackService:
                 ],
             )
         elif mode == 'gau' and domain is not None:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 f'recon {mode}',
                 [
                     ['gau', '--subs', domain],
@@ -340,7 +331,7 @@ class HackService:
                 'zoomeye',
             ]
             for source in sources:
-                self.utils.run_command_output_loop(
+                run_command_output_loop(
                     f'recon {mode}',
                     [
                         [
@@ -363,12 +354,12 @@ class HackService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
     def dns(
         self,
         host: str,
@@ -382,7 +373,7 @@ class HackService:
         '''
         service_name: str = 'DNS/DIG'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'scan/dig', host)
+        path: str = create_service_folder(f'scan/dig', host)
         nameserver = []
         if ns is not None:
             if not ns.startswith('@'):
@@ -401,7 +392,7 @@ class HackService:
                 file_suffix_1 = f'_{test_01}' if test_01 and len(test_01) > 0 else ''
                 file_suffix_2 = f'_{test_02}' if test_02 and len(test_02) > 0 else ''
                 cur_record = [test_01] if test_01 and len(test_01) > 0 else []
-                self.utils.run_command_output_loop(
+                run_command_output_loop(
                     'dig',
                     [
                         ['dig'] +
@@ -420,11 +411,11 @@ class HackService:
         )
         service_name = 'DNS/HOST'
         log_runBanner(service_name)
-        path = self.utils.create_service_folder(f'scan/host', host)
-        self.utils.run_command_output_loop(
+        path = create_service_folder(f'scan/host', host)
+        run_command_output_loop(
             'whois', [['whois', host], ['tee', f'{path}/whois.log']]
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'host', [['host', '-aRR', host], ['tee', f'{path}/host.log']]
         )
         logging.log(
@@ -438,10 +429,10 @@ class HackService:
         '''
         service_name: str = 'DOMAIN'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'scan/domain', domain)
+        path: str = create_service_folder(f'scan/domain', domain)
         mode_types = ['subdomains', 'tlds', 'all']
         for types in mode_types:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 'domain',
                 [
                     ['curl', '-s', f'https://sonar.omnisint.io/{types}/{domain}'],
@@ -457,24 +448,24 @@ class HackService:
         '''
         service_name: str = 'TLS'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'scan/tls', domain)
+        path: str = create_service_folder(f'scan/tls', domain)
         # TODO: check param domain for port or http
         create_domain = f'{domain}:{port}'
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'openssl [1/5]',
             [
                 ['openssl', 's_client', '-connect', create_domain, '-showcerts'],
                 ['tee', f'{path}/openssl_info_cert.log'],
             ],
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'openssl [2/5]',
             [
                 ['openssl', 's_client', '-connect', create_domain],
                 ['tee', f'{path}/openssl_info.log'],
             ],
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'openssl [3/5]',
             [
                 [
@@ -488,7 +479,7 @@ class HackService:
                 ['tee', f'{path}/openssl_text.log'],
             ],
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'openssl [4/5]',
             [
                 [
@@ -502,7 +493,7 @@ class HackService:
                 ['tee', f'{path}/openssl_fingerprint.log'],
             ],
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'openssl [5/5]',
             [
                 [
@@ -522,7 +513,7 @@ class HackService:
                 ['tee', f'{path}/openssl_fingerprint.log'],
             ],
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'cert/crt.sh',
             [
                 ['curl', '-s', f'https://crt.sh/?q={domain}&output=json'],
@@ -536,12 +527,12 @@ class HackService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
     def nmap(
         self,
         host: str,
@@ -557,9 +548,7 @@ class HackService:
         '''
         service_name: str = 'NMAP'
         log_runBanner(service_name)
-        path = self.utils.create_service_folder(
-            f'scan/nmap', host
-        ) if path is None else path
+        path = create_service_folder(f'scan/nmap', host) if path is None else path
         hosts: Union[str, List[str], None] = host.split(' ')
         ports: Union[str, List[str], None] = None  # port
         port_range_scan = ['-p-']  # '-p-' | '-F-' | '--top-ports=1000'
@@ -581,14 +570,12 @@ class HackService:
         if validators.url(host_to_check, public=True):
             logging.log(logging.DEBUG, "domain is a public host, try add script-args")
             options_script_args_extend = []
-            if SECRET_SHODAN_API_KEY is not None:
+            if settings.SECRET_SHODAN_API_KEY is not None:
                 options_script_args_extend.append(
-                    f'shodan-api.apikey={SECRET_SHODAN_API_KEY}'
+                    f'shodan-api.apikey={settings.SECRET_SHODAN_API_KEY}'
                 )
-            if GEO_LICENSE_KEY is not None:
-                options_script_args_extend.append(
-                    f'ip-geolocation.maxmind_db={self.utils.geo()}'
-                )
+            if settings.GEO_LICENSE_KEY is not None:
+                options_script_args_extend.append(f'ip-geolocation.maxmind_db={geo()}')
             if len(options_script_args_extend) > 0:
                 options_script_args.append('--script-args')
                 options_script_args.append(','.join(options_script_args_extend))
@@ -609,7 +596,7 @@ class HackService:
         ] + options_improve_scan + mode_decoy + port_range_scan
         options_port_udp_scan = options_port_scan + ['-sU', '-sT', '--max-retries=1']
         options_output_format = ['-oX', f'{path}/inital.xml', '-oA', f'{path}/inital']
-        if self.ctx.logging_verbose is not None and self.ctx.logging_verbose >= 3:
+        if settings.LOGGING_VERBOSE is not None and settings.LOGGING_VERBOSE >= 3:
             options.append('-d')
         options_full_scan = [
             '--reason'
@@ -618,9 +605,10 @@ class HackService:
         # hosts = [host.address for host in nmap_report_hosts.hosts if host.is_up()]
         # logging.log(logging.DEBUG, hosts)
         if isinstance(hosts, List):
-            hosts = self.utils.run_command_output_loop(
+            hosts = run_command_output_loop(
                 'nmap host-up scan',
-                [['nmap'] + options_privileged + options_host_scan + hosts, ['grep', 'report for'], ['cut', '-d', ' ', '-f5'], ['sort'], ['uniq'], ['tr', '\\n', ' '], ['sed', 's/ $//']],
+                [['nmap'] + options_privileged + options_host_scan + hosts, ['grep', 'report for'],
+                    ['cut', '-d', ' ', '-f5'], ['sort'], ['uniq'], ['tr', '\\n', ' '], ['sed', 's/ $//']],
                 # TODO: check grep when scan between ip and domain
             )
         else:
@@ -645,10 +633,10 @@ class HackService:
                 # ports = sorted(set((str(p[0]) for p in ports_host_tmp)))
                 # logging.log(logging.DEBUG, ports)
                 if udp:
-                    ports = self.utils.run_command_output_loop(
+                    ports = run_command_output_loop(
                         'nmap udp ports scan',
                         [
-                            self.ctx.use_sudo +
+                            settings.USE_SUDO +
                             ['nmap'] +
                             options_privileged +
                             options_port_udp_scan +
@@ -662,10 +650,10 @@ class HackService:
                         ],
                     )
                 else:
-                    ports = self.utils.run_command_output_loop(
+                    ports = run_command_output_loop(
                         'nmap tcp ports scan',
                         [
-                            self.ctx.use_sudo +
+                            settings.USE_SUDO +
                             ['nmap'] +
                             options_privileged +
                             options_port_scan +
@@ -686,10 +674,10 @@ class HackService:
                 with open(f'{path}/ports.lst', 'w') as file:
                     file.write('\n'.join(ports))
                 # RUN full scan for information's
-                self.utils.run_command_output_loop(
+                run_command_output_loop(
                     'nmap scan',
                     [
-                        self.ctx.use_sudo +
+                        settings.USE_SUDO +
                         ['nmap'] +
                         options_privileged +
                         options_full_scan +
@@ -700,7 +688,7 @@ class HackService:
                 )
                 # nmap_report = self.utils.nmap_process('nmap scan', hosts, options_full_scan+['-p', ','.join(ports)], safe_mode=False)
                 if os.path.isfile(f'{path}/inital.xml'):
-                    self.utils.run_command_output_loop(
+                    run_command_output_loop(
                         'nmap convert xls',
                         [
                             [
@@ -711,7 +699,7 @@ class HackService:
                             ]
                         ],
                     )
-                    self.utils.run_command_output_loop(
+                    run_command_output_loop(
                         'nmap convert html',
                         [
                             [
@@ -739,16 +727,16 @@ class HackService:
         '''
         service_name: str = 'MASSCAN'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'scan/masscan', host)
-        self.utils.run_command_output_loop(
+        path: str = create_service_folder(f'scan/masscan', host)
+        run_command_output_loop(
             'masscan',
             [
-                self.ctx.use_sudo +
+                settings.USE_SUDO +
                 ['masscan', host, '-oX', f'{path}/masscan.xml'] +
                 options
             ],
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'xsltproc',
             [
                 [
@@ -760,7 +748,7 @@ class HackService:
                 ]
             ],
         )
-        ports = self.utils.run_command_output_loop(
+        ports = run_command_output_loop(
             'cat ports',
             [
                 ['cat', f'{path}/masscan.xml'],
@@ -784,12 +772,12 @@ class HackService:
         else:
             logging.log(logging.WARNING, '[-] No ports found')
 
-
     # TODO: add ffuf
     # ffuf -w ./vhosts -u http://10.129.42.195 -H "HOST: FUZZ.www.inlanefreight.htb"
     # ffuf -recursion -recursion-depth 1 -u http://192.168.10.10/FUZZ -w /opt/useful/SecLists/Discovery/Web-Content/raft-small-directories-lowercase.txt
     # cewl -m5 --lowercase -w wordlist.txt http://192.168.10.10
     # ffuf -w ./folders.txt:FOLDERS,./wordlist.txt:WORDLIST,./extensions.txt:EXTENSIONS -u http://192.168.10.10/FOLDERS/WORDLISTEXTENSIONS
+
     def gobuster(
         self,
         host: str,
@@ -804,14 +792,14 @@ class HackService:
         '''
         service_name: str = 'GOBUSTER'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'scan/gobuster', host)
-        # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
-        wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/raft-medium-words.txt' if w_list is None else w_list
+        path: str = create_service_folder(f'scan/gobuster', host)
+        # wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
+        wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/Web-Content/raft-medium-words.txt' if w_list is None else w_list
         if exclude_length is not None:
             options + ['--exclude-length', str(exclude_length)]
         if type == 'dir' or type is None:
-            wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
-            self.utils.run_command_output_loop(
+            wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
+            run_command_output_loop(
                 'gobuster dir',
                 [
                     [
@@ -832,8 +820,8 @@ class HackService:
                 ],
             )
         elif type == 'vhost':
-            wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list is None else w_list
-            self.utils.run_command_output_loop(
+            wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list is None else w_list
+            run_command_output_loop(
                 'gobuster vhost',
                 [
                     [
@@ -854,14 +842,14 @@ class HackService:
                 ],
             )
         elif type == 'fuzz':
-            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
-            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/Apache.fuzz.txt' if w_list is None else w_list
-            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/ApacheTomcat.fuzz.txt' if w_list is None else w_list
-            wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/FatwireCMS.fuzz.txt' if w_list is None else w_list
-            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/CMS/wordpress.fuzz.txt' if w_list is None else w_list
-            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/CMS/wp-plugins.fuzz.txt' if w_list is None else w_list
-            # wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/CMS/wp-themes.fuzz.txt' if w_list is None else w_list
-            self.utils.run_command_output_loop(
+            # wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
+            # wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/Web-Content/Apache.fuzz.txt' if w_list is None else w_list
+            # wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/Web-Content/ApacheTomcat.fuzz.txt' if w_list is None else w_list
+            wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/Web-Content/FatwireCMS.fuzz.txt' if w_list is None else w_list
+            # wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/Web-Content/CMS/wordpress.fuzz.txt' if w_list is None else w_list
+            # wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/Web-Content/CMS/wp-plugins.fuzz.txt' if w_list is None else w_list
+            # wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/Web-Content/CMS/wp-themes.fuzz.txt' if w_list is None else w_list
+            run_command_output_loop(
                 'gobuster fuzz',
                 [
                     [
@@ -882,8 +870,8 @@ class HackService:
                 ],
             )
         elif type == 'dns':
-            wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list is None else w_list
-            self.utils.run_command_output_loop(
+            wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/DNS/subdomains-top1million-110000.txt' if w_list is None else w_list
+            run_command_output_loop(
                 'gobuster dns',
                 [
                     [
@@ -904,8 +892,8 @@ class HackService:
                 ],
             )
         elif type == 'bak':
-            wordlist = f'{self.ctx.home_path}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
-            self.utils.run_command_output_loop(
+            wordlist = f'{settings.HOME_PATH}/.vm_recon/git/SecLists/Discovery/Web-Content/big.txt' if w_list is None else w_list
+            run_command_output_loop(
                 'gobuster bak',
                 [
                     [
@@ -939,11 +927,11 @@ class HackService:
         '''
         service_name: str = 'KITRUNNER'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'scan/kr', host)
+        path: str = create_service_folder(f'scan/kr', host)
         wordlist = '/opt/git/kiterunner/routes.kite' if w_list is None else w_list
         max_connection_per_host = 10
         ignore_length = 34
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'kitrunner',
             [
                 [
@@ -1001,7 +989,7 @@ class HackService:
         '''
         service_name: str = 'SQLMAP'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'scan/sqlmap', host)
+        path: str = create_service_folder(f'scan/sqlmap', host)
         database_name_l = ['-D', database_name] if database_name else []
         tables_name_l = ['-T', tables_name] if tables_name else []
         data = f'--data={data}' if data else ''
@@ -1016,7 +1004,7 @@ class HackService:
         parse_errors = '--parse-errors' if parse_errors else ''
         dump = f'--dump' if dump else ''
         tamper = f'--tamper={tamper}' if tamper else ''
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'sqlmap',
             [
                 [
@@ -1051,12 +1039,12 @@ class HackService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
     def smb(self, hosts: str, ports: str = '139;445') -> None:
         '''
             ...
@@ -1065,10 +1053,10 @@ class HackService:
         log_runBanner(service_name)
         for host in hosts.split(' '):
             for port in ports.split(default_split_by):
-                path: str = self.utils.create_service_folder(f'scan/smb', host)
+                path: str = create_service_folder(f'scan/smb', host)
                 # SMBCLIENT ############################################################
                 ########################################################################
-                self.utils.run_command_output_loop(
+                run_command_output_loop(
                     'smbclient scan',
                     [
                         ['smbclient', '-N', '-p', str(port).strip(), '-L', f'//{host}'],
@@ -1093,7 +1081,7 @@ class HackService:
                 print('')
                 # ENUM4LINUX ############################################################
                 ########################################################################
-                self.utils.run_command_output_loop(
+                run_command_output_loop(
                     'enum4linux scan',
                     [['enum4linux', host], ['tee', f'{path}/enum4linux.log']],
                 )
@@ -1109,13 +1097,14 @@ class HackService:
                     '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                 )
                 print('')
-        logging.log(
-            verboselogs.SUCCESS,
-            f'[*] {service_name} Done! View the log reports under {path}/',
-        )
+
+                logging.log(
+                    verboselogs.SUCCESS,
+                    f'[*] {service_name} Done! View the log reports under {path}/',
+                )
         # NMAP #################################################################
         ########################################################################
-        path = self.utils.create_service_folder(f'scan/smb', hosts)
+        path = create_service_folder(f'scan/smb', hosts)
         smb_options = [
             '--script',
             'smb-vuln-*,smb-os-discovery,smb-enum-shares.nse,smb-enum-users.nse',
@@ -1133,13 +1122,13 @@ class HackService:
         '''
         service_name: str = 'RPC'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'scan/rpc', hosts)
+        path: str = create_service_folder(f'scan/rpc', hosts)
         # for host in hosts.split(' '):
         #     for port in ports.split(','):
-        #         path:str = self.utils.create_service_folder(f'scan/smb', host)
+        #         path:str = create_service_folder(f'scan/smb', host)
         #         # SMBCLIENT ############################################################
         #         ########################################################################
-        #         self.utils.run_command_output_loop('smbclient scan', [
+        #         run_command_output_loop('smbclient scan', [
         #             ['smbclient', '-N', '-p', str(port).strip(), '-L', f'//{host}'],
         #             ['tee', f'{path}/smbclient.log']
         #         ])
@@ -1160,20 +1149,20 @@ class HackService:
             host=hosts, port=ports, udp=True, options=n_options, path=path, silent=False
         )
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
     def whatweb(self, host: str, silent: int = 3) -> None:
         '''
             ...
         '''
         service_name: str = 'WHATWEB'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'scan/whatweb', host)
-        self.utils.run_command_output_loop(
+        path: str = create_service_folder(f'scan/whatweb', host)
+        run_command_output_loop(
             'whatweb silent',
             [
                 [
@@ -1187,7 +1176,7 @@ class HackService:
                 ]
             ],
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             'wafw00f', [['wafw00f', '-v', host], ['tee', f'{path}/wafw00f.log']]
         )
         logging.log(
@@ -1201,13 +1190,13 @@ class HackService:
         '''
         service_name: str = 'WPSCAN'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'scan/wpscan', host)
+        path: str = create_service_folder(f'scan/wpscan', host)
         mode = ['--plugins-detection', 'aggressive'] if silent == False else [
             '--plugins-detection', 'passive'
         ]
         options = ['--random-user-agent', '-e', 'ap']
         to_file = ['-o', f'{path}/wpscan']
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             f'wpscan {mode}',
             [
                 ['wpscan', '--url', host] + options + to_file + mode,
@@ -1238,15 +1227,15 @@ class HackService:
                     splitter = a
                 else:
                     splitter = f'{splitter}_{a}'
-        path: str = self.utils.create_service_folder(f'scan/accounting', splitter)
+        path: str = create_service_folder(f'scan/accounting', splitter)
         if domain is not None:
-            self.utils.run_command_output_loop(
+            run_command_output_loop(
                 f'emailfinder',
                 [['emailfinder', '-d', domain], ['tee', f'{path}/emailfinder.log']],
             )
         if username is not None:
             # '--output', f'{path}/sherlock.name'
-            cmd_result = self.utils.run_command_output_loop(
+            cmd_result = run_command_output_loop(
                 f'sherlock',
                 [
                     ['sherlock', username, '--folderoutput', f'{path}/'],
@@ -1268,10 +1257,10 @@ class HackService:
                     ]
                     output_sterra = ['-p', f'{path}/sterra', '-f', 'csv']
                     cred_sterra = []
-                    if SECRET_INSTAGRAM_SSID is not None:
-                        cred_sterra = ['-ssid', SECRET_INSTAGRAM_SSID]
+                    if settings.SECRET_INSTAGRAM_SSID is not None:
+                        cred_sterra = ['-ssid', settings.SECRET_INSTAGRAM_SSID]
                         for fi in found_insta:
-                            cmd_result = self.utils.run_command_output_loop(
+                            cmd_result = run_command_output_loop(
                                 f'sterra',
                                 [
                                     ['sterra', '-u', fi] +
@@ -1288,27 +1277,27 @@ class HackService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
     def pwn(self, file: str) -> None:
         '''
             ...
         '''
         service_name: str = 'PWN'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder(f'pwn/checks', file)
-        self.utils.run_command_output_loop(
+        path: str = create_service_folder(f'pwn/checks', file)
+        run_command_output_loop(
             f'pwn file', [['file', file], ['tee', f'{path}/file.log']]
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             f'pwn strings',
             [['strings', '-n', '10', file], ['tee', f'{path}/strings.log']],
         )
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             f'pwn checksec',
             [['checksec', '--file', file], ['tee', f'{path}/checksec.log']],
         )

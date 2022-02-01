@@ -4,7 +4,7 @@ import sys
 import click
 
 from ..service.hack_service import HackService
-from ..utils.utils import Context, pass_context
+from ..utils.utilsHelper import Context, define_option_list, pass_context
 
 default_split_by = ','
 
@@ -21,13 +21,7 @@ def cli(ctx: Context):
         A wrapper for recon services
         with predefined params
     '''
-    if ctx.utils is not None:
-        ctx.service = HackService(ctx)
-    else:
-        logging.log(logging.ERROR, f'utils are not set')
-        sys.exit(1)
-
-
+    ctx.service = HackService()
 
 
 # ------------------------------------------------------------------------------
@@ -54,8 +48,6 @@ def clone_page(ctx: Context, host: str, ssl_verify: bool):
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
-
-
 
 
 # ------------------------------------------------------------------------------
@@ -142,8 +134,6 @@ def tls(ctx: Context, domain):
         sys.exit(2)
 
 
-
-
 # ------------------------------------------------------------------------------
 #
 #
@@ -202,11 +192,11 @@ def nmap(
             '--script=discovery',
             '-vv',
         ]
-        options = service.utils.define_option_list(
-            default_options=defaults,
+        options = define_option_list(
             options=options,
+            default_options=defaults,
             options_append=options_append,
-            default_split_by=default_split_by,
+            # default_split_by=default_split_by,
         )
         service.nmap(
             host=host, port=ports, udp=udp, options=options, rate=rate, silent=silent
@@ -265,11 +255,11 @@ def gobuster(ctx: Context, host, mode, threads, wordlist, options, options_appen
     service: HackService = ctx.service
     try:
         defaults = ['-k', '-r', '--random-agent']
-        options = service.utils.define_option_list(
-            default_options=defaults,
+        options = define_option_list(
             options=options,
+            default_options=defaults,
             options_append=options_append,
-            default_split_by=default_split_by,
+            # default_split_by=default_split_by,
         )
         service.gobuster(
             host=host, type=mode, threads=threads, w_list=wordlist, options=options
@@ -368,8 +358,6 @@ def sqlmap(ctx: Context, host, method, data, cookie, dbms, scan_databases, scan_
         sys.exit(2)
 
 
-
-
 # ------------------------------------------------------------------------------
 #
 #
@@ -437,8 +425,6 @@ def rpc(ctx: Context, hosts, ports):
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
-
-
 
 
 # ------------------------------------------------------------------------------
@@ -509,8 +495,6 @@ def accounting(ctx: Context, username: str, email: str):
         sys.exit(2)
 
 
-
-
 # ------------------------------------------------------------------------------
 #
 #
@@ -571,8 +555,6 @@ def recon(ctx: Context, domain, org, mode, threads, depth, nameserver):
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
-
-
 
 
 # ------------------------------------------------------------------------------

@@ -4,7 +4,7 @@ import sys
 import click
 
 from ..service.hack_service import HackService
-from ..utils.utils import Context, pass_context
+from ..utils.utilsHelper import Context, pass_context
 
 
 # ------------------------------------------------------------------------------
@@ -19,11 +19,7 @@ def cli(ctx: Context):
         A wrapper for infra structure scanning
         with predefined params
     '''
-    if ctx.utils is not None:
-        ctx.service = HackService(ctx)
-    else:
-        logging.log(logging.ERROR, f'utils are not set')
-        sys.exit(1)
+    ctx.service = HackService()
 
 
 

