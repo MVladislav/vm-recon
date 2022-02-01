@@ -5,7 +5,7 @@
 import os
 from subprocess import check_call
 
-from setuptools import setup
+from setuptools import find_packages, setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 
@@ -35,6 +35,8 @@ SCRIPT_INSTALL: str = os.getenv('VM_SCRIPT_INSTALL', 'no')
 def main():
     PROJECT_NAME_SLUG = slugify(PROJECT_NAME)
     setup(
+        name=PROJECT_NAME_SLUG,
+        packages=['app'],
         cmdclass={
             'develop': PostDevelopCommand,
             'install': PostInstallCommand,

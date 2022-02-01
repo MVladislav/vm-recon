@@ -5,7 +5,7 @@ from typing import Union
 import coloredlogs
 import verboselogs
 
-from app.utils.config import settings
+from .config import settings
 
 
 class LoggingMsgType(Enum):
@@ -60,6 +60,8 @@ class LogHelper:
         elif logging_verbose >= 0:
             log_format = "%(message)s"
         elif logging_verbose < 0:
+            log_format = "%(message)s"
+        else:
             log_format = "%(message)s"
         # create a log objectfrom verboselogs
         verboselogs.install()

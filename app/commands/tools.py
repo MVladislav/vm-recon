@@ -23,6 +23,8 @@ def cli(ctx: Context):
     ctx.service = ToolService()
 
 
+
+
 # ------------------------------------------------------------------------------
 #
 #
@@ -46,6 +48,8 @@ def geo(ctx: Context, host: str):
         sys.exit(2)
 
 
+
+
 # ------------------------------------------------------------------------------
 #
 #
@@ -55,7 +59,7 @@ def geo(ctx: Context, host: str):
 @click.option(
     '-w',
     '--what',
-    type=click.Choice(list(map(lambda c: c.value, DownloadWhat))),
+    type=click.Choice(list(map( lambda c: c.value, DownloadWhat))),
     help='download a tool',
     required=True,
 )
@@ -73,6 +77,8 @@ def wget(ctx: Context, what: DownloadWhat):
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
+
+
 
 
 # ------------------------------------------------------------------------------
@@ -125,6 +131,8 @@ def pwncat(ctx: Context, host: Union[str, None], port: Union[int, None]):
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
+
+
 
 
 # ------------------------------------------------------------------------------

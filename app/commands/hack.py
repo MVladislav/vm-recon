@@ -24,6 +24,8 @@ def cli(ctx: Context):
     ctx.service = HackService()
 
 
+
+
 # ------------------------------------------------------------------------------
 #
 #
@@ -48,6 +50,8 @@ def clone_page(ctx: Context, host: str, ssl_verify: bool):
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
+
+
 
 
 # ------------------------------------------------------------------------------
@@ -132,6 +136,8 @@ def tls(ctx: Context, domain):
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
+
+
 
 
 # ------------------------------------------------------------------------------
@@ -358,6 +364,8 @@ def sqlmap(ctx: Context, host, method, data, cookie, dbms, scan_databases, scan_
         sys.exit(2)
 
 
+
+
 # ------------------------------------------------------------------------------
 #
 #
@@ -425,6 +433,8 @@ def rpc(ctx: Context, hosts, ports):
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
+
+
 
 
 # ------------------------------------------------------------------------------
@@ -495,6 +505,8 @@ def accounting(ctx: Context, username: str, email: str):
         sys.exit(2)
 
 
+
+
 # ------------------------------------------------------------------------------
 #
 #
@@ -555,6 +567,8 @@ def recon(ctx: Context, domain, org, mode, threads, depth, nameserver):
     except Exception as e:
         logging.log(logging.CRITICAL, e, exc_info=True)
         sys.exit(2)
+
+
 
 
 # ------------------------------------------------------------------------------

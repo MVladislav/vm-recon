@@ -35,12 +35,12 @@ class HackService:
         '''
         logging.log(logging.DEBUG, 'hack-service is initiated')
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
     def clone_page(self, host: str, ssl_verify: bool = True) -> None:
         '''
             ...
@@ -63,12 +63,12 @@ class HackService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
     def recon(
         self,
         domain: Union[str, None],
@@ -188,8 +188,7 @@ class HackService:
         elif mode == 'hakrawler' and domain is not None:
             run_command_output_loop(
                 f'recon {mode}',
-                [['echo', domain], ['hakrawler', '-d', str(depth), '-subs', '-t',
-                                    str(threads), '-insecure'], ['tee', f'{path}/hakrawler.log']],
+                [['echo', domain], ['hakrawler', '-d', str(depth), '-subs', '-t', str(threads), '-insecure'], ['tee', f'{path}/hakrawler.log']],
                 # -h 'Cookie: foo=bar;Authorization: token'
             )
         elif mode == 'subfinder' and domain is not None:
@@ -354,12 +353,12 @@ class HackService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
     def dns(
         self,
         host: str,
@@ -527,12 +526,12 @@ class HackService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
     def nmap(
         self,
         host: str,
@@ -607,8 +606,7 @@ class HackService:
         if isinstance(hosts, List):
             hosts = run_command_output_loop(
                 'nmap host-up scan',
-                [['nmap'] + options_privileged + options_host_scan + hosts, ['grep', 'report for'],
-                    ['cut', '-d', ' ', '-f5'], ['sort'], ['uniq'], ['tr', '\\n', ' '], ['sed', 's/ $//']],
+                [['nmap'] + options_privileged + options_host_scan + hosts, ['grep', 'report for'], ['cut', '-d', ' ', '-f5'], ['sort'], ['uniq'], ['tr', '\\n', ' '], ['sed', 's/ $//']],
                 # TODO: check grep when scan between ip and domain
             )
         else:
@@ -772,12 +770,12 @@ class HackService:
         else:
             logging.log(logging.WARNING, '[-] No ports found')
 
+
     # TODO: add ffuf
     # ffuf -w ./vhosts -u http://10.129.42.195 -H "HOST: FUZZ.www.inlanefreight.htb"
     # ffuf -recursion -recursion-depth 1 -u http://192.168.10.10/FUZZ -w /opt/useful/SecLists/Discovery/Web-Content/raft-small-directories-lowercase.txt
     # cewl -m5 --lowercase -w wordlist.txt http://192.168.10.10
     # ffuf -w ./folders.txt:FOLDERS,./wordlist.txt:WORDLIST,./extensions.txt:EXTENSIONS -u http://192.168.10.10/FOLDERS/WORDLISTEXTENSIONS
-
     def gobuster(
         self,
         host: str,
@@ -1039,12 +1037,12 @@ class HackService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
     def smb(self, hosts: str, ports: str = '139;445') -> None:
         '''
             ...
@@ -1097,7 +1095,6 @@ class HackService:
                     '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                 )
                 print('')
-
                 logging.log(
                     verboselogs.SUCCESS,
                     f'[*] {service_name} Done! View the log reports under {path}/',
@@ -1149,12 +1146,12 @@ class HackService:
             host=hosts, port=ports, udp=True, options=n_options, path=path, silent=False
         )
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
     def whatweb(self, host: str, silent: int = 3) -> None:
         '''
             ...
@@ -1277,12 +1274,12 @@ class HackService:
             f'[*] {service_name} Done! View the log reports under {path}/',
         )
 
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
 
+    # --------------------------------------------------------------------------
+    #
+    #
+    #
+    # --------------------------------------------------------------------------
     def pwn(self, file: str) -> None:
         '''
             ...

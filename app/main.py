@@ -27,20 +27,23 @@ print('* https://mvladislav.online                                    *')
 print('* https://github.com/MVladislav                                *')
 print('****************************************************************')
 print()
-
-
 # ------------------------------------------------------------------------------
 #
 #
 #
 # ------------------------------------------------------------------------------
+app_name = __name__.split(".")[0]
+app_lib_dir = os.path.dirname(__file__)
+commands_path = os.path.join(app_lib_dir, 'commands')
+cmd_folder = os.path.abspath(commands_path)
+
+
 class ComplexCLI(click.MultiCommand):
 
     def list_commands(self, ctx):
+        # ctx.say('list_commands', verbosity=100)
         rv = []
-        for filename in os.listdir(
-            os.path.join(os.path.dirname(__file__), './commands')
-        ):
+        for filename in os.listdir(cmd_folder):
             if filename.endswith('.py') and not filename.startswith('__'):
                 rv.append(filename[:-3])
         rv.sort()
@@ -48,11 +51,15 @@ class ComplexCLI(click.MultiCommand):
 
     def get_command(self, ctx, name):
         try:
-            mod = __import__(f'app.commands.{name}', None, None, ['cli'])
+            print()
+            print(app_name)
+            print()
+            mod = __import__(f'{app_name}.commands.{name}', None, None, ['cli'])
             return mod.cli
 
         except ImportError as e:
             logging.log(logging.CRITICAL, e)
+        return
 
 
 # ------------------------------------------------------------------------------

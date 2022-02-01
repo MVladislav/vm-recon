@@ -119,7 +119,7 @@ def geo() -> Union[str, None]:
     This is a geo test example
     """
     try:
-        from app.utils.locater import Locator
+        from .locater import Locator
         return Locator().check_database()
 
     except Exception as e:

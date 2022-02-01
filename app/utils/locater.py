@@ -5,15 +5,15 @@ import shutil
 import socket
 import sys
 import tarfile
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 import maxminddb
 import requests
 from maxminddb.types import Record
 from stringcolor import bold
 
-from app.utils.config import settings
-from app.utils.utilsFolderHelper import create_service_folder
+from .config import settings
+from .utilsFolderHelper import create_service_folder
 
 
 # ------------------------------------------------------------------------------
@@ -128,15 +128,15 @@ class Locator:
             logging.log(logging.CRITICAL, e, exc_info=True)
         return None
 
-    def query(self, url: Union[str, None] = None, ip: Union[str, None] = None) -> Union[Record, None]:
+    def query(
+        self, url: Union[str, None] = None, ip: Union[str, None] = None
+    ) -> Union[Record, None]:
         try:
             target: Union[str, None] = None
-
             if url is not None:
                 self.url = url
             elif ip is not None:
                 self.ip = ip
-
             if self.url is not None:
                 logging.log(logging.INFO, f"Translating {self.url}")
                 sys.stdout.flush()
@@ -149,7 +149,6 @@ class Locator:
                 target = self.ip
             else:
                 logging.log(logging.WARNING, "URL or IP is need to be defined")
-
             try:
                 if target is not None:
                     logging.log(logging.INFO, f"Querying for Records of {target}")
@@ -159,6 +158,7 @@ class Locator:
                             pprint.pprint(data)
                             logging.log(logging.INFO, "Query Complete!")
                             return data
+
                     else:
                         logging.log(logging.WARNING, "data file is not set correct")
             except Exception as ex:
