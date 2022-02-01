@@ -3,12 +3,11 @@ from pathlib import Path
 from typing import List, Union
 
 import verboselogs
-from pydantic import BaseSettings
 from starlette.config import Config
 from stringcolor.ops import Bold
 
 
-class Settings(BaseSettings):
+class Settings():
     # --------------------------------------------------------------------------
     #
     #
@@ -94,15 +93,7 @@ class Settings(BaseSettings):
     #
     #
     # --------------------------------------------------------------------------
-    class Config:
-        case_sensitive = True
 
-
-    # --------------------------------------------------------------------------
-    #
-    #
-    #
-    # --------------------------------------------------------------------------
     def print(self) -> None:
         if self.LOGGING_LEVEL == logging.getLevelName(logging.DEBUG):
             print()
